@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Tajawal:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
 
@@ -16,16 +15,19 @@
 
   <div class="admin-topbar">
     <div class="admin-logo">خطوة<span>.</span><small>لوحة التحكم</small></div>
-    <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none;">تسجيل خروج</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a href="index.html" class="btn btn-outline btn-sm" target="_blank">عرض الموقع</a>
+      <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none;">تسجيل خروج</button>
+    </div>
   </div>
 
-  <!-- ============ شاشة الإعداد الأول (لا يوجد توكن محفوظ) ============ -->
+  <!-- شاشة الإعداد الأول -->
   <div class="lock-screen" id="setupScreen" style="display:none;">
     <div class="lock-icon">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
-    <h2>إعداد لوحة التحكم لأول مرة</h2>
-    <p>المعلومات بالأسفل تُحفظ على هذا المتصفح فقط، ولا تُرسل لأي مكان غير GitHub مباشرة.</p>
+    <h2>إعداد لوحة التحكم</h2>
+    <p>المعلومات تُحفظ على هذا المتصفح فقط ولا تُرسل لأي مكان غير GitHub مباشرة.</p>
 
     <div class="alert alert-error" id="setupError"></div>
 
@@ -50,40 +52,39 @@
         <p class="field-hint">صلاحية Contents: Read and write على هذا الريبو فقط.</p>
       </div>
       <div class="field">
-        <label>رمز PIN لقفل هذا الجهاز (4 أرقام)</label>
+        <label>رمز PIN (4 أرقام)</label>
         <input type="password" inputmode="numeric" maxlength="6" id="cfgPin" placeholder="••••" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;" id="setupSubmit">
-        التحقق وحفظ الإعدادات
-      </button>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="setupSubmit">التحقق وحفظ الإعدادات</button>
     </form>
   </div>
 
-  <!-- ============ شاشة قفل PIN (يوجد إعداد محفوظ مسبقاً) ============ -->
+  <!-- شاشة PIN -->
   <div class="lock-screen" id="pinScreen" style="display:none;">
     <div class="lock-icon">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
     <h2>أدخل رمز القفل</h2>
-    <p>هذا الجهاز يحتوي إعدادات محفوظة مسبقاً.</p>
+    <p>هذا الجهاز يحتوي إعدادات محفوظة.</p>
     <div class="alert alert-error" id="pinError"></div>
     <form id="pinForm">
       <div class="field">
-        <input type="password" inputmode="numeric" maxlength="6" id="pinInput" placeholder="••••" style="text-align:center; font-size:22px; letter-spacing:8px;" autofocus>
+        <input type="password" inputmode="numeric" maxlength="6" id="pinInput" placeholder="••••" style="text-align:center;font-size:22px;letter-spacing:8px;" autofocus>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;">دخول</button>
     </form>
     <p style="margin-top:18px;">
-      <a href="#" id="forgotLink" style="font-size:12px; color:var(--ink-soft);">نسيت الرمز؟ مسح بيانات هذا الجهاز</a>
+      <a href="#" id="forgotLink" style="font-size:12px;color:var(--ink-soft);">نسيت الرمز؟ مسح بيانات هذا الجهاز</a>
     </p>
   </div>
 
-  <!-- ============ لوحة التحكم ============ -->
+  <!-- لوحة التحكم -->
   <div class="dashboard" id="dashboard">
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="addPanel">إضافة منتج</button>
-      <button class="tab-btn" data-tab="listPanel">المنتجات الحالية</button>
+      <button class="tab-btn active" data-tab="addPanel">➕ إضافة منتج</button>
+      <button class="tab-btn" data-tab="listPanel">📋 المنتجات</button>
+      <button class="tab-btn" data-tab="catsPanel">🏷️ الفئات</button>
     </div>
 
     <div class="alert alert-success" id="globalSuccess"></div>
@@ -96,28 +97,27 @@
         <form id="productForm">
           <input type="hidden" id="editingId" value="">
 
+          <!-- صور متعددة -->
           <div class="field">
-            <label>صورة المنتج</label>
-            <img class="image-preview" id="imagePreview">
-            <div class="image-drop">
-              <input type="file" id="imageInput" accept="image/*">
-              <p>اضغط لاختيار صورة، أو اتركها بدون صورة لاستخدام أيقونة افتراضية</p>
+            <label>صور المنتج (حتى 10 صور)</label>
+            <div class="multi-images" id="multiImagesPreview"></div>
+            <div class="image-drop" id="imageDropZone">
+              <input type="file" id="imageInput" accept="image/*" multiple>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p>اضغط لاختيار صور (يمكن اختيار عدة صور)</p>
+              <p style="font-size:11px;margin-top:4px;opacity:.6;">الحد الأقصى 10 صور</p>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field">
               <label>اسم المنتج</label>
-              <input type="text" id="fName" required>
+              <input type="text" id="fName" required placeholder="مثال: حذاء رياضي أسود">
             </div>
             <div class="field">
               <label>الفئة</label>
               <select id="fCategory" required>
-                <option value="رياضي">رياضي</option>
-                <option value="كلاسيك">كلاسيك</option>
-                <option value="شحاطات">شحاطات</option>
-                <option value="كاجوال">كاجوال</option>
-                <option value="رياضة جري">رياضة جري</option>
+                <option value="">اختر الفئة</option>
               </select>
             </div>
           </div>
@@ -125,11 +125,13 @@
           <div class="field-row">
             <div class="field">
               <label>السعر (د.ع)</label>
-              <input type="number" id="fPrice" min="0" required>
+              <input type="text" id="fPrice" placeholder="مثال: 45000" required>
+              <p class="field-hint" id="fPriceHint"></p>
             </div>
             <div class="field">
               <label>السعر قبل الخصم (اختياري)</label>
-              <input type="number" id="fOldPrice" min="0">
+              <input type="text" id="fOldPrice" placeholder="مثال: 60000">
+              <p class="field-hint" id="fOldPriceHint"></p>
             </div>
           </div>
 
@@ -158,14 +160,30 @@
             </select>
           </div>
 
+          <!-- مقاسات ديناميكية -->
           <div class="field">
             <label>المقاسات المتوفرة</label>
             <div class="size-checks" id="sizeChecks"></div>
+            <div class="add-tag-row" style="margin-top:10px;">
+              <input type="number" class="add-tag-input" id="newSizeInput" placeholder="أضف مقاساً مخصصاً">
+              <button type="button" class="btn btn-outline btn-sm" onclick="addCustomSize()">+ إضافة</button>
+            </div>
+          </div>
+
+          <!-- ألوان ديناميكية -->
+          <div class="field">
+            <label>الألوان المتوفرة (اختياري)</label>
+            <div class="dynamic-tags" id="colorTags"></div>
+            <div class="add-tag-row">
+              <input type="text" class="add-tag-input" id="newColorInput" placeholder="مثال: أسود, أبيض, أزرق">
+              <button type="button" class="btn btn-outline btn-sm" onclick="addColor()">+ إضافة</button>
+            </div>
+            <p class="field-hint">اكتب اسم اللون واضغط إضافة، أو اضغط Enter</p>
           </div>
 
           <div class="field">
             <label>الوصف</label>
-            <textarea id="fDescription" rows="3" required></textarea>
+            <textarea id="fDescription" rows="3" required placeholder="اكتب وصفاً مختصراً للمنتج..."></textarea>
           </div>
 
           <div class="form-actions">
@@ -180,12 +198,31 @@
     <div class="panel" id="listPanel">
       <div class="card">
         <h3>المنتجات المنشورة حالياً</h3>
+        <div style="margin-bottom:14px;">
+          <input type="text" id="adminSearch" placeholder="ابحث في المنتجات..." style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-family:var(--font-body);font-size:14px;">
+        </div>
         <div id="productsList"><div class="empty-state">جارِ التحميل...</div></div>
       </div>
     </div>
 
+    <!-- الفئات -->
+    <div class="panel" id="catsPanel">
+      <div class="card">
+        <h3>إدارة الفئات</h3>
+        <div class="dynamic-tags" id="adminCatTags"></div>
+        <div class="add-tag-row" style="margin-top:14px;">
+          <input type="text" class="add-tag-input" id="newCatInput" placeholder="اسم الفئة الجديدة">
+          <button type="button" class="btn btn-primary btn-sm" onclick="addCategory()">+ إضافة</button>
+        </div>
+        <p style="margin-top:14px;font-size:12px;color:var(--ink-soft);">الفئة "الكل" تُضاف تلقائياً ولا تحتاج إدخالها.</p>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary btn-sm" onclick="saveCategoriesBtn()">💾 حفظ الفئات</button>
+        </div>
+      </div>
+    </div>
+
     <div class="danger-zone">
-      <p>هذا الخيار يمسح إعدادات GitHub والـ PIN من هذا المتصفح فقط (لا يحذف أي شي من الريبو).</p>
+      <p>مسح إعدادات GitHub والـ PIN من هذا المتصفح فقط (لا يحذف أي شي من الريبو).</p>
       <button class="btn btn-outline btn-sm" id="wipeDeviceBtn">مسح بيانات هذا الجهاز</button>
     </div>
   </div>

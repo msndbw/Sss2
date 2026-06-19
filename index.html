@@ -26,7 +26,7 @@
 <!-- الهيدر -->
 <header class="site-header" id="siteHeader">
   <div class="container header-inner">
-    <div class="logo">خطوة<span>.</span></div>
+    <div class="logo" id="siteLogo">خطوة<span>.</span></div>
 
     <nav class="main-nav" id="mainNav">
       <a href="#home" class="active">الرئيسية</a>
@@ -41,7 +41,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
         <input id="searchInput" type="text" placeholder="ابحث عن حذاء...">
       </label>
-      <button class="icon-btn" aria-label="السلة">
+      <button class="icon-btn" id="cartBtn" aria-label="السلة">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.6 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6"/><circle cx="9" cy="21" r="1.4" fill="currentColor"/><circle cx="18" cy="21" r="1.4" fill="currentColor"/></svg>
         <span class="cart-count" id="cartCount">0</span>
       </button>
@@ -84,9 +84,21 @@
   </div>
 </section>
 
-<!-- شريط الفئات -->
+<!-- شريط الفئات والبحث المتقدم -->
 <section class="cat-strip container" id="products">
   <div class="chips" id="catChips"></div>
+  <div class="filter-bar" style="margin-top:16px;">
+    <select class="filter-select" id="sortSelect">
+      <option value="">ترتيب: الافتراضي</option>
+      <option value="price-asc">الأقل سعراً</option>
+      <option value="price-desc">الأعلى سعراً</option>
+      <option value="new">الأحدث</option>
+      <option value="bestseller">الأكثر مبيعاً</option>
+    </select>
+    <select class="filter-select" id="sizeFilter">
+      <option value="">جميع المقاسات</option>
+    </select>
+  </div>
 </section>
 
 <!-- الأكثر مبيعاً -->
@@ -139,26 +151,17 @@
     <div class="review-card reveal">
       <div class="review-stars">★★★★★</div>
       <p class="review-text">طلبت حذاء رياضي والتوصيل كان سريع والجودة فوق التوقعات، تواصل واتساب سهّل علي كل شي.</p>
-      <div class="review-by">
-        <div class="review-avatar">ح</div>
-        <div><div class="review-name">حسين علي</div><div class="review-loc">بغداد</div></div>
-      </div>
+      <div class="review-by"><div class="review-avatar">ح</div><div><div class="review-name">حسين علي</div><div class="review-loc">بغداد</div></div></div>
     </div>
     <div class="review-card reveal">
       <div class="review-stars">★★★★★</div>
       <p class="review-text">الحذاء الكلاسيك الجلد كان نفس الصورة تماماً، ومقاسي كان دقيق. تعامل محترم وسريع.</p>
-      <div class="review-by">
-        <div class="review-avatar">م</div>
-        <div><div class="review-name">مصطفى جبار</div><div class="review-loc">البصرة</div></div>
-      </div>
+      <div class="review-by"><div class="review-avatar">م</div><div><div class="review-name">مصطفى جبار</div><div class="review-loc">البصرة</div></div></div>
     </div>
     <div class="review-card reveal">
       <div class="review-stars">★★★★★</div>
       <p class="review-text">أسعار منطقية مقارنة بالجودة، وخدمة ما بعد البيع ممتازة. سأطلب مرة ثانية بكل تأكيد.</p>
-      <div class="review-by">
-        <div class="review-avatar">ع</div>
-        <div><div class="review-name">علي كاظم</div><div class="review-loc">أربيل</div></div>
-      </div>
+      <div class="review-by"><div class="review-avatar">ع</div><div><div class="review-name">علي كاظم</div><div class="review-loc">أربيل</div></div></div>
     </div>
   </div>
 </section>
@@ -191,7 +194,7 @@
       </div>
       <div class="footer-col">
         <h4>الفئات</h4>
-        <ul>
+        <ul id="footerCats">
           <li><a href="#products">أحذية رياضية</a></li>
           <li><a href="#products">أحذية كلاسيك</a></li>
           <li><a href="#products">شحاطات</a></li>
@@ -218,6 +221,64 @@
 <a href="#" class="float-whatsapp" data-wa-general aria-label="تواصل عبر واتساب">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
 </a>
+
+<!-- ===== سلة المشتريات ===== -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer" role="dialog" aria-label="سلة المشتريات">
+  <div class="cart-drawer-head">
+    <h3>🛒 سلة المشتريات</h3>
+    <button class="cart-close" id="cartClose" aria-label="إغلاق">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-total-row">
+      <span class="cart-total-label">المجموع</span>
+      <span class="cart-total-price" id="cartTotal">0 د.ع</span>
+    </div>
+    <button class="btn btn-primary" id="checkoutBtn">إتمام الطلب</button>
+  </div>
+</div>
+
+<!-- ===== صفحة المنتج ===== -->
+<div class="product-modal-overlay" id="productModalOverlay">
+  <div class="product-modal" id="productModal">
+    <button class="product-modal-close" id="productModalClose" aria-label="إغلاق">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="product-modal-body">
+      <div class="product-gallery">
+        <div class="gallery-main" id="galleryMain">
+          <div id="galleryMainContent"></div>
+        </div>
+        <div class="gallery-nav" id="galleryNav" style="display:none;">
+          <button class="gallery-arrow" id="galleryPrev" aria-label="السابق">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="gallery-arrow" id="galleryNext" aria-label="التالي">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="gallery-thumbs" id="galleryThumbs"></div>
+      </div>
+      <div class="product-detail" id="productDetail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== نافذة الطلب والفاتورة ===== -->
+<div class="order-overlay" id="orderOverlay">
+  <div class="order-modal" id="orderModal">
+    <div class="order-modal-head">
+      <h3 id="orderModalTitle">تأكيد الطلب</h3>
+      <button class="cart-close" id="orderClose" aria-label="إغلاق">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="orderContent"></div>
+  </div>
+</div>
 
 <script src="main.js"></script>
 </body>
