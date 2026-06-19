@@ -9,28 +9,6 @@
   ],
   "products": [
     {
-      "id": "p7",
-      "name": "حذاء جري خفيف",
-      "category": "رياضة جري",
-      "icon": "running",
-      "image": "",
-      "price": 55000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "حذاء جري خفيف الوزن بتقنية امتصاص الصدمات، مثالي للجري والتمارين الرياضية.",
-      "rating": 4.8
-    },
-    {
       "id": "p8",
       "name": "حذاء كلاسيك بني",
       "category": "كلاسيك",
