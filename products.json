@@ -29,6 +29,29 @@
       "badge": "bestseller",
       "description": "شحاطة اصبع جميل جداً وخفيفة درجه أولى",
       "rating": 4.5
+    },
+    {
+      "id": "p1781867495300",
+      "name": "ايافا كف سيرين",
+      "category": "رياضي",
+      "icon": "sneaker",
+      "image": "images/p1781867495300.jpg",
+      "price": 80000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "status": "available",
+      "badge": null,
+      "description": "كف سيرين اصلي",
+      "rating": 4.5
     }
   ]
 }
