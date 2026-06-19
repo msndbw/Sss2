@@ -9,28 +9,6 @@
   ],
   "products": [
     {
-      "id": "p3",
-      "name": "حذاء كلاسيك جلد أسود",
-      "category": "كلاسيك",
-      "icon": "classic",
-      "image": "",
-      "price": 60000,
-      "oldPrice": 75000,
-      "discount": 20,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "offer",
-      "description": "حذاء كلاسيك جلد طبيعي فاخر، مناسب للمناسبات الرسمية والعمل. خياطة متينة وتفصيل أنيق.",
-      "rating": 4.9
-    },
-    {
       "id": "p4",
       "name": "حذاء رياضي أبيض",
       "category": "رياضي",
