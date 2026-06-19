@@ -1,16 +1,16 @@
 /* ====================================================
-   admin.js v2 — لوحة تحكم متجر خطوة
+   admin.js v3 — لوحة تحكم متجر خطوة (مطور)
    ==================================================== */
 
 const CFG_KEY = "khatwa_admin_cfg";
 const DEFAULT_SIZES = [38,39,40,41,42,43,44,45,46];
 
 let cfg = null;
-let pendingImages = [];   // [{base64, ext}]
-let currentColors = [];   // ["أسود","أبيض",...]
-let customSizes = [];     // مقاسات مخصصة مضافة يدوياً
-let adminProducts = [];   // قائمة المنتجات المحملة
-let adminCategories = []; // الفئات بدون "الكل"
+let pendingImages = [];
+let currentColors = [];
+let customSizes = [];
+let adminProducts = [];
+let adminCategories = [];
 
 /* ---------- تنسيق الأسعار ---------- */
 function formatAdminPrice(raw){
@@ -43,11 +43,8 @@ function hideAlert(id){ document.getElementById(id)?.classList.remove("show"); }
    ==================================================== */
 function boot(){
   cfg = loadCfg();
-  if (!cfg){
-    document.getElementById("setupScreen").style.display = "block";
-  } else {
-    document.getElementById("pinScreen").style.display = "block";
-  }
+  if (!cfg){ document.getElementById("setupScreen").style.display = "block"; }
+  else { document.getElementById("pinScreen").style.display = "block"; }
 }
 
 document.getElementById("setupForm").addEventListener("submit", async (e)=>{
@@ -56,7 +53,6 @@ document.getElementById("setupForm").addEventListener("submit", async (e)=>{
   const btn = document.getElementById("setupSubmit");
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> جارٍ التحقق...`;
-
   const candidate = {
     owner: document.getElementById("cfgOwner").value.trim(),
     repo: document.getElementById("cfgRepo").value.trim(),
@@ -64,7 +60,6 @@ document.getElementById("setupForm").addEventListener("submit", async (e)=>{
     token: document.getElementById("cfgToken").value.trim(),
     pin: document.getElementById("cfgPin").value.trim()
   };
-
   try{
     await GitHubAPI.verifyAccess(candidate);
     saveCfg(candidate);
@@ -112,6 +107,8 @@ function unlockDashboard(){
   renderSizeChecks();
   loadProductsList();
   loadAdminCategories();
+  loadSettings();
+  updateStats();
 }
 
 /* ====================================================
@@ -125,6 +122,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab==="listPanel") loadProductsList();
     if (btn.dataset.tab==="catsPanel") renderAdminCategories();
+    if (btn.dataset.tab==="settingsPanel") loadSettings();
   });
 });
 
@@ -259,6 +257,7 @@ async function saveCategoriesBtn(){
     data.categories = ["الكل", ...adminCategories];
     await GitHubAPI.putTextFile(cfg, "products.json", JSON.stringify(data,null,2), "تحديث الفئات", file.sha);
     showAlert("globalSuccess","تم حفظ الفئات ✓");
+    updateStats();
   }catch(err){
     showAlert("globalError","تعذّر حفظ الفئات: "+err.message);
   }
@@ -308,6 +307,17 @@ function resetForm(){
 
 document.getElementById("cancelEditBtn").addEventListener("click", resetForm);
 
+function generateProductId(products){
+  // توليد معرف فريد بصيغة PID-XXX
+  const existing = products.map(p=>{
+    const match = p.id.match(/PID-(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  });
+  const max = existing.length ? Math.max(...existing) : 0;
+  const next = (max + 1).toString().padStart(3, '0');
+  return `PID-${next}`;
+}
+
 function fillFormForEdit(p){
   document.getElementById("editingId").value = p.id;
   document.getElementById("formTitle").textContent = "تعديل: " + p.name;
@@ -320,7 +330,6 @@ function fillFormForEdit(p){
   document.getElementById("fDescription").value = p.description||"";
   document.getElementById("fDiscount").value = p.discount||0;
 
-  // الأسعار
   const priceEl = document.getElementById("fPrice");
   const oldPriceEl = document.getElementById("fOldPrice");
   priceEl.value = p.price||"";
@@ -328,12 +337,8 @@ function fillFormForEdit(p){
   if (p.price) document.getElementById("fPriceHint").textContent = Number(p.price).toLocaleString("ar-IQ")+" د.ع";
   if (p.oldPrice) document.getElementById("fOldPriceHint").textContent = Number(p.oldPrice).toLocaleString("ar-IQ")+" د.ع";
 
-  // الفئة
-  setTimeout(()=>{
-    document.getElementById("fCategory").value = p.category||"";
-  }, 100);
+  setTimeout(()=>{ document.getElementById("fCategory").value = p.category||""; }, 100);
 
-  // المقاسات
   customSizes = (p.sizes||[]).filter(s=>!DEFAULT_SIZES.includes(s));
   renderSizeChecks();
   setTimeout(()=>{
@@ -342,11 +347,9 @@ function fillFormForEdit(p){
     });
   }, 50);
 
-  // الألوان
   currentColors = [...(p.colors||[])];
   renderColorTags();
 
-  // الصور
   const images = p.images?.length ? p.images : (p.image ? [p.image] : []);
   pendingImages = images.map(url=>({dataUrl:url, url, base64:null, ext:"jpg"}));
   renderImagePreviews();
@@ -366,27 +369,25 @@ document.getElementById("productForm").addEventListener("submit", async (e)=>{
   try{
     const editingId = document.getElementById("editingId").value;
     const sizes = Array.from(document.querySelectorAll(".size-box:checked")).map(cb=>Number(cb.value));
-
     if (sizes.length===0) throw new Error("اختر مقاس واحد على الأقل");
 
     const file = await GitHubAPI.getTextFile(cfg, "products.json");
     if (!file.content) throw new Error("لم يتم العثور على products.json");
     const data = JSON.parse(file.content);
 
-    const id = editingId || ("p" + Date.now());
+    let id = editingId;
+    if (!id) {
+      id = generateProductId(data.products || []);
+    }
 
     // رفع الصور الجديدة
     const uploadedImages = [];
-
-    // الصور الموجودة مسبقاً (من التعديل)
     for (const img of pendingImages){
       if (img.base64){
-        // صورة جديدة تحتاج رفع
         const imgPath = `images/${id}_${Date.now()}_${uploadedImages.length}.${img.ext}`;
         await GitHubAPI.putBinaryFile(cfg, imgPath, img.base64, `رفع صورة ${id}`);
         uploadedImages.push(imgPath);
       } else if (img.url){
-        // صورة موجودة مسبقاً
         uploadedImages.push(img.url);
       }
     }
@@ -406,13 +407,18 @@ document.getElementById("productForm").addEventListener("submit", async (e)=>{
       status: document.getElementById("fStatus").value,
       badge: document.getElementById("fBadge").value||null,
       description: document.getElementById("fDescription").value.trim(),
-      rating: 4.5
+      rating: 4.5,
+      hidden: false // الوضع الافتراضي
     };
 
     if (editingId){
       const idx = data.products.findIndex(p=>p.id===editingId);
-      if (idx>-1) data.products[idx] = productObj;
-      else data.products.push(productObj);
+      if (idx>-1) {
+        // الحفاظ على حالة الإخفاء القديمة إذا كانت موجودة
+        const oldHidden = data.products[idx].hidden || false;
+        productObj.hidden = oldHidden;
+        data.products[idx] = productObj;
+      } else data.products.push(productObj);
     } else {
       data.products.push(productObj);
     }
@@ -427,6 +433,7 @@ document.getElementById("productForm").addEventListener("submit", async (e)=>{
     showAlert("globalSuccess", editingId ? "تم حفظ التعديلات ✓" : "تم نشر المنتج ✓ (قد يستغرق ظهوره دقيقة)");
     resetForm();
     loadProductsList();
+    updateStats();
 
   }catch(err){
     showAlert("globalError","حدث خطأ: "+err.message);
@@ -437,7 +444,7 @@ document.getElementById("productForm").addEventListener("submit", async (e)=>{
 });
 
 /* ====================================================
-   قائمة المنتجات
+   قائمة المنتجات (مع إخفاء/إظهار)
    ==================================================== */
 async function loadProductsList(){
   const wrap = document.getElementById("productsList");
@@ -449,18 +456,36 @@ async function loadProductsList(){
     adminProducts = data.products||[];
     renderProductsList(adminProducts);
 
-    // بحث إداري
     const searchEl = document.getElementById("adminSearch");
     if (searchEl){
-      searchEl.addEventListener("input", ()=>{
-        const q = searchEl.value.trim().toLowerCase();
-        const filtered = q ? adminProducts.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)) : adminProducts;
-        renderProductsList(filtered);
-      });
+      searchEl.removeEventListener("input", searchFilter);
+      searchEl.addEventListener("input", searchFilter);
     }
 
   }catch(err){
     wrap.innerHTML = `<div class="empty-state">تعذّر التحميل: ${err.message}</div>`;
+  }
+}
+
+function searchFilter(){
+  const q = document.getElementById("adminSearch").value.trim().toLowerCase();
+  const filtered = q ? adminProducts.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)) : adminProducts;
+  renderProductsList(filtered);
+}
+
+async function toggleProductVisibility(id){
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "products.json");
+    const data = JSON.parse(file.content);
+    const idx = data.products.findIndex(p=>p.id===id);
+    if (idx===-1) throw new Error("المنتج غير موجود");
+    data.products[idx].hidden = !data.products[idx].hidden;
+    await GitHubAPI.putTextFile(cfg, "products.json", JSON.stringify(data,null,2), `تغيير حالة ${data.products[idx].name}`, file.sha);
+    showAlert("globalSuccess", "تم تحديث حالة المنتج ✓");
+    loadProductsList();
+    updateStats();
+  }catch(err){
+    showAlert("globalError", "تعذّر التحديث: "+err.message);
   }
 }
 
@@ -474,15 +499,19 @@ function renderProductsList(products){
     const images = p.images?.length ? p.images : (p.image ? [p.image] : []);
     const thumb = images.length ? `<img src="${images[0]}" alt="">` : "👟";
     const statusText = p.status==="available"?"✅ متوفر":p.status==="limited"?"⚠️ محدود":"❌ نفذ";
+    const hiddenText = p.hidden ? "🔒 مخفي" : "👁️ ظاهر";
     return `
     <div class="admin-product">
       <div class="thumb">${thumb}</div>
       <div class="info">
-        <b>${p.name}</b>
-        <span>${p.category} · ${Number(p.price).toLocaleString("ar-IQ")} د.ع · ${statusText}</span>
+        <b>${p.name} <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">${p.id}</span></b>
+        <span>${p.category} · ${Number(p.price).toLocaleString("ar-IQ")} د.ع · ${statusText} · ${hiddenText}</span>
         ${images.length>1?`<span style="font-size:11px;color:var(--ember);">${images.length} صور</span>`:""}
       </div>
       <div class="actions">
+        <button class="icon-action" onclick="toggleProductVisibility('${p.id}')" aria-label="إخفاء/إظهار" style="color:${p.hidden ? '#c63b3b' : 'var(--success)'};">
+          ${p.hidden ? '🔓' : '🔒'}
+        </button>
         <button class="icon-action" data-edit="${p.id}" aria-label="تعديل">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
@@ -514,9 +543,70 @@ async function deleteProduct(id){
     await GitHubAPI.putTextFile(cfg,"products.json",JSON.stringify(data,null,2),`حذف: ${product?.name||id}`,file.sha);
     showAlert("globalSuccess","تم الحذف ✓");
     loadProductsList();
+    updateStats();
   }catch(err){
     showAlert("globalError","تعذّر الحذف: "+err.message);
   }
 }
+
+/* ====================================================
+   الإحصائيات
+   ==================================================== */
+function updateStats(){
+  const total = adminProducts.length;
+  const visible = adminProducts.filter(p=>!p.hidden).length;
+  const hidden = adminProducts.filter(p=>p.hidden).length;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statVisible").textContent = visible;
+  document.getElementById("statHidden").textContent = hidden;
+  document.getElementById("statCats").textContent = adminCategories.length;
+}
+
+/* ====================================================
+   إعدادات التواصل (settings.json)
+   ==================================================== */
+async function loadSettings(){
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "settings.json");
+    const data = file.content ? JSON.parse(file.content) : {};
+    document.getElementById("setPhone").value = data.phone || "";
+    document.getElementById("setFacebook").value = data.facebook || "";
+    document.getElementById("setInstagram").value = data.instagram || "";
+    document.getElementById("setTiktok").value = data.tiktok || "";
+    document.getElementById("setTelegram").value = data.telegram || "";
+  }catch(e){
+    // الملف غير موجود
+    document.getElementById("setPhone").value = "";
+    document.getElementById("setFacebook").value = "";
+    document.getElementById("setInstagram").value = "";
+    document.getElementById("setTiktok").value = "";
+    document.getElementById("setTelegram").value = "";
+  }
+}
+
+document.getElementById("settingsForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById("settingsSubmit");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> جارٍ الحفظ...`;
+  try{
+    const data = {
+      phone: document.getElementById("setPhone").value.trim(),
+      facebook: document.getElementById("setFacebook").value.trim(),
+      instagram: document.getElementById("setInstagram").value.trim(),
+      tiktok: document.getElementById("setTiktok").value.trim(),
+      telegram: document.getElementById("setTelegram").value.trim()
+    };
+    const file = await GitHubAPI.getTextFile(cfg, "settings.json");
+    await GitHubAPI.putTextFile(cfg, "settings.json", JSON.stringify(data, null, 2), "تحديث إعدادات التواصل", file.sha);
+    document.getElementById("settingsStatus").innerHTML = `<div class="alert alert-success show">✅ تم حفظ الإعدادات بنجاح!</div>`;
+    setTimeout(()=>{ document.getElementById("settingsStatus").innerHTML = ""; }, 4000);
+  }catch(err){
+    document.getElementById("settingsStatus").innerHTML = `<div class="alert alert-error show">❌ خطأ: ${err.message}</div>`;
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = "💾 حفظ الإعدادات";
+  }
+});
 
 boot();
