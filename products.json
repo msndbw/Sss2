@@ -9,28 +9,6 @@
   ],
   "products": [
     {
-      "id": "p10",
-      "name": "شحاط طبي مرن",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 30000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "شحاط طبي بنعل مرن داعم للقدم يقلل الضغط عن الكعب والمفاصل، مناسب لمن يقضي وقتاً طويلاً واقفاً.",
-      "rating": 4.7
-    },
-    {
       "id": "p1781862616771",
       "name": "كات اصبع رحالي",
       "category": "شحاطات",
