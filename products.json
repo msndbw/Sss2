@@ -9,27 +9,6 @@
   ],
   "products": [
     {
-      "id": "p6",
-      "name": "حذاء كاجوال سويدي",
-      "category": "كاجوال",
-      "icon": "classic",
-      "image": "",
-      "price": 40000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44
-      ],
-      "status": "available",
-      "badge": null,
-      "description": "حذاء كاجوال من خامة السويد الناعمة، يجمع بين الراحة والمظهر العصري.",
-      "rating": 4.5
-    },
-    {
       "id": "p7",
       "name": "حذاء جري خفيف",
       "category": "رياضة جري",
