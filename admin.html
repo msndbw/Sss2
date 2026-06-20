@@ -86,6 +86,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="addPanel">➕ إضافة منتج</button>
       <button class="tab-btn" data-tab="listPanel">📋 المنتجات</button>
+      <button class="tab-btn" data-tab="ordersPanel">🧾 الطلبات</button>
       <button class="tab-btn" data-tab="catsPanel">🏷️ الفئات</button>
       <button class="tab-btn" data-tab="contactPanel">📞 التواصل</button>
     </div>
@@ -205,6 +206,32 @@
           <input type="text" id="adminSearch" placeholder="ابحث في المنتجات..." style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid var(--line);font-family:var(--font-body);font-size:14px;">
         </div>
         <div id="productsList"><div class="empty-state">جارِ التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- الطلبات -->
+    <div class="panel" id="ordersPanel">
+      <div class="card">
+        <h3>📥 استلام طلب جديد</h3>
+        <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">
+          عندما يرسل الزبون طلباً من الموقع، يضغط زر "نسخ بيانات الطلب للوحة التحكم" في شاشة الفاتورة.
+          الصق الكود الذي نسخه هنا ثم اضغط "إضافة الطلب" لحفظه في هذه اللوحة.
+        </p>
+        <div class="field">
+          <label>كود الطلب الملصوق</label>
+          <textarea id="orderPasteInput" rows="4" placeholder="الصق كود الطلب هنا (يبدأ بـ KHATWA-ORDER:)"></textarea>
+        </div>
+        <div class="alert alert-error" id="orderPasteError"></div>
+        <div class="alert alert-success" id="orderPasteSuccess"></div>
+        <button class="btn btn-primary btn-sm" id="addOrderBtn" onclick="addOrderFromPaste()">➕ إضافة الطلب</button>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <h3 style="margin-bottom:0;">الطلبات المحفوظة</h3>
+          <button class="btn btn-outline btn-sm" onclick="loadOrdersList()">🔄 تحديث</button>
+        </div>
+        <div id="ordersList"><div class="empty-state">جارِ التحميل...</div></div>
       </div>
     </div>
 

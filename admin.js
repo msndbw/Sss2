@@ -134,6 +134,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab==="listPanel") loadProductsList();
+    if (btn.dataset.tab==="ordersPanel") loadOrdersList();
     if (btn.dataset.tab==="catsPanel") renderAdminCategories();
     if (btn.dataset.tab==="contactPanel") loadContactInfo();
   });
@@ -681,6 +682,185 @@ async function deleteProduct(id){
     loadProductsList();
   }catch(err){
     showAlert("globalError","تعذّر الحذف: "+err.message);
+  }
+}
+
+/* ====================================================
+   الطلبات
+   تُستلم بيانات الطلب كـ "كود طلب" ينسخه الزبون من شاشة الفاتورة
+   بالموقع، ثم يُلصق هنا ويُحفظ في orders.json بنفس الريبو
+   ==================================================== */
+const ORDER_CODE_PREFIX = "KHATWA-ORDER:";
+let adminOrders = [];
+
+function decodeOrderCode(raw){
+  const text = (raw||"").trim();
+  if (!text.startsWith(ORDER_CODE_PREFIX)){
+    throw new Error("الكود غير صالح — تأكد أنه يبدأ بـ KHATWA-ORDER:");
+  }
+  const b64 = text.slice(ORDER_CODE_PREFIX.length).trim();
+  try{
+    const json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  }catch(err){
+    throw new Error("تعذّر قراءة بيانات الطلب — تأكد من نسخ الكود كاملاً دون نقص");
+  }
+}
+
+async function addOrderFromPaste(){
+  hideAlert("orderPasteError");
+  hideAlert("orderPasteSuccess");
+  const input = document.getElementById("orderPasteInput");
+  const btn = document.getElementById("addOrderBtn");
+  const raw = input.value;
+
+  let order;
+  try{
+    order = decodeOrderCode(raw);
+  }catch(err){
+    showAlert("orderPasteError", err.message);
+    return;
+  }
+
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.innerHTML = `<span class="spinner"></span> جارٍ الحفظ...`;
+
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
+    const data = file.content ? JSON.parse(file.content) : { orders: [] };
+    if (!Array.isArray(data.orders)) data.orders = [];
+
+    // تفادي تكرار نفس الطلب إذا لُصق أكثر من مرة
+    if (data.orders.some(o=>o.id===order.id)){
+      showAlert("orderPasteError","هذا الطلب مضاف مسبقاً.");
+      return;
+    }
+
+    order.status = order.status || "new";
+    order.receivedAt = new Date().toISOString();
+    data.orders.unshift(order);
+
+    await GitHubAPI.putTextFile(cfg, "orders.json", JSON.stringify(data,null,2), `طلب جديد: ${order.id}`, file.sha);
+    showAlert("orderPasteSuccess","تمت إضافة الطلب بنجاح ✓");
+    input.value = "";
+    loadOrdersList();
+  }catch(err){
+    showAlert("orderPasteError","تعذّر حفظ الطلب: "+err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+
+async function loadOrdersList(){
+  const wrap = document.getElementById("ordersList");
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="empty-state">جارِ التحميل...</div>`;
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
+    const data = file.content ? JSON.parse(file.content) : { orders: [] };
+    adminOrders = Array.isArray(data.orders) ? data.orders : [];
+    renderOrdersList(adminOrders);
+  }catch(err){
+    wrap.innerHTML = `<div class="empty-state">تعذّر التحميل: ${err.message}</div>`;
+  }
+}
+
+function renderOrdersList(orders){
+  const wrap = document.getElementById("ordersList");
+  if (!orders.length){
+    wrap.innerHTML = `<div class="empty-state">لا توجد طلبات محفوظة بعد.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = orders.map(o=>{
+    const c = o.customer || {};
+    const dateStr = o.date ? new Date(o.date).toLocaleString("ar-IQ") : "";
+    const statusLabel = o.status === "done" ? "✅ تم التنفيذ" : "🆕 جديد";
+
+    const itemsHTML = (o.items||[]).map(it=>{
+      const thumb = it.image ? `<img src="${it.image}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">` : `<div style="width:40px;height:40px;background:var(--mist);border-radius:6px;display:flex;align-items:center;justify-content:center;">👟</div>`;
+      let variant = "";
+      if (it.pieces?.length > 1){
+        variant = it.pieces.map((pc,i)=>`ق${i+1}: ${pc.size||""}${pc.color?" / "+pc.color:""}`).join(" | ");
+      } else {
+        const parts = [];
+        if (it.size) parts.push(`مقاس ${it.size}`);
+        if (it.color) parts.push(it.color);
+        variant = parts.join(" / ");
+      }
+      return `<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);">
+        ${thumb}
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;">${it.name} <span style="color:var(--ink-soft);font-weight:400;">(${it.code})</span></div>
+          <div style="font-size:11px;color:var(--ink-soft);">${variant} — الكمية: ${it.qty}</div>
+        </div>
+        <div style="font-weight:700;font-size:13px;">${formatAdminPrice(it.total)} د.ع</div>
+      </div>`;
+    }).join("");
+
+    return `
+    <div class="card" style="margin-bottom:14px;border:2px solid ${o.status==='done'?'var(--line)':'var(--ember)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div>
+          <div style="font-family:var(--font-display);font-weight:800;font-size:14px;">${o.id}</div>
+          <div style="font-size:11px;color:var(--ink-soft);">${dateStr}</div>
+        </div>
+        <span style="font-size:12px;font-weight:700;">${statusLabel}</span>
+      </div>
+
+      <div style="background:var(--mist);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.9;">
+        <b>${c.name || "بدون اسم"}</b> — <a href="tel:${c.phone}">${c.phone||""}</a><br>
+        ${c.province||""} ${c.district?" / "+c.district:""}<br>
+        ${c.landmark?`أقرب نقطة: ${c.landmark}<br>`:""}
+        ${c.notes?`ملاحظات: ${c.notes}<br>`:""}
+      </div>
+
+      <div style="margin-bottom:12px;">${itemsHTML}</div>
+
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:4px;">
+        <span>المجموع الفرعي</span><span>${formatAdminPrice(o.subtotal)} د.ع</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:10px;">
+        <span>أجور التوصيل</span><span>${formatAdminPrice(o.deliveryFee)} د.ع</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:800;font-size:15px;margin-bottom:14px;">
+        <span>المجموع الكلي</span><span style="color:var(--ember);">${formatAdminPrice(o.total)} د.ع</span>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="https://wa.me/${(c.phone||"").replace(/[^0-9]/g,"")}" target="_blank" class="btn btn-whatsapp btn-sm">تأكيد عبر واتساب</a>
+        ${o.status!=="done" ? `<button class="btn btn-outline btn-sm" onclick="markOrderDone('${o.id}')">✓ وضع كمُنفّذ</button>` : ""}
+        <button class="btn btn-outline btn-sm" onclick="deleteOrder('${o.id}')">🗑️ حذف</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function markOrderDone(id){
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
+    const data = JSON.parse(file.content);
+    const order = data.orders.find(o=>o.id===id);
+    if (order) order.status = "done";
+    await GitHubAPI.putTextFile(cfg,"orders.json",JSON.stringify(data,null,2),`تحديث حالة الطلب: ${id}`,file.sha);
+    loadOrdersList();
+  }catch(err){
+    alert("تعذّر تحديث الطلب: "+err.message);
+  }
+}
+
+async function deleteOrder(id){
+  if (!confirm("حذف هذا الطلب نهائياً؟")) return;
+  try{
+    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
+    const data = JSON.parse(file.content);
+    data.orders = data.orders.filter(o=>o.id!==id);
+    await GitHubAPI.putTextFile(cfg,"orders.json",JSON.stringify(data,null,2),`حذف الطلب: ${id}`,file.sha);
+    loadOrdersList();
+  }catch(err){
+    alert("تعذّر حذف الطلب: "+err.message);
   }
 }
 

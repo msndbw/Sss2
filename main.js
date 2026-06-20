@@ -4,7 +4,21 @@
    ==================================================== */
 
 const WHATSAPP_NUMBER = "9647857392727";
+const MESSENGER_LINK = "https://m.me/61590750916432";
 const DATA_URL = "products.json";
+
+/* أجور التوصيل: 1000 د.ع لقضاء البدير في محافظة القادسية، و5000 د.ع لبقية مناطق العراق */
+const DELIVERY_FEE_SPECIAL = 1000;
+const DELIVERY_FEE_DEFAULT = 5000;
+const DELIVERY_SPECIAL_PROVINCE = "القادسية";
+const DELIVERY_SPECIAL_DISTRICT = "البدير";
+
+function calcDeliveryFee(province, district){
+  if (province === DELIVERY_SPECIAL_PROVINCE && district === DELIVERY_SPECIAL_DISTRICT){
+    return DELIVERY_FEE_SPECIAL;
+  }
+  return DELIVERY_FEE_DEFAULT;
+}
 
 let PRODUCTS = [];
 let CATEGORIES = ["الكل"];
@@ -47,6 +61,29 @@ const IRAQ_PROVINCES = [
   "القادسية","بابل","واسط","النجف","كربلاء","الأنبار","ديالى","صلاح الدين",
   "دهوك","ميسان","حلبجة"
 ];
+
+/* أقضية كل محافظة عراقية (المصدر: الجهاز المركزي للإحصاء العراقي) */
+const IRAQ_DISTRICTS = {
+  "بغداد": ["الرصافة","الكرخ","الأعظمية","الكاظمية","الصدر الأولى","الصدر الثانية","المدائن","المحمودية","أبو غريب","الطارمية","الراشدية","الزهور","الطاجي","الزوراء"],
+  "البصرة": ["البصرة","أبو الخصيب","الزبير","القرنة","المدينة","الفاو","الهارثة","شط العرب","سفوان","الدير","الصادق"],
+  "نينوى": ["الموصل","تلعفر","تلكيف","الحمدانية","سنجار","الشيخان","البعاج","الحضر","مخمور"],
+  "أربيل": ["أربيل","عنكاوة","كويسنجق","شقلاوة","سوران","مخمور","جومان","خبات","رواندوز","قوشتبة","خليفان","بيرمام","ميركةسور","سيدكان"],
+  "السليمانية": ["السليمانية","حلبجة","رانية","كلار","دوكان","جمجمال","پشدر","پنجوين","دربندخان","شارباژير","شاره زور","ماوت","بازيان","قرةداغ","سيد صادق","كفري","خانقين","حاجياوة"],
+  "كركوك": ["كركوك","الحويجة","الدبس","داقوق"],
+  "ذي قار": ["الناصرية","الشطرة","سوق الشيوخ","الرفاعي","الجبايش","قلعة سكر","الفجر","البطحاء","الإصلاح","الغراف","الدواية","النصر","كرمة بني سعيد","سيد دخيل"],
+  "المثنى": ["السماوة","الرميثة","الخضر","الوركاء","الهلال","المجد","النجمي","السلمان","السوير"],
+  "القادسية": ["الديوانية","عفك","الدغارة","البدير","الحمزة","الشامية","غماس","الشنافية","الشافعية","المهناوية","السنية","السدير","سومر"],
+  "بابل": ["الحلة","المسيب","المحاويل","الهاشمية","القاسم","الكفل","كوثى"],
+  "واسط": ["الكوت","الحي","النعمانية","الصويرة","العزيزية","بدرة","الأحرار","الزبيدية","الموفقية"],
+  "النجف": ["النجف","الكوفة","المناذرة","المشخاب"],
+  "كربلاء": ["كربلاء","الهندية","عين التمر","الحر","الحسينية","الجدول الغربي"],
+  "الأنبار": ["الرمادي","الفلوجة","هيت","حديثة","عنه","القائم","الرطبة","الكرمة","الحبانية","العامرية","عكاشات"],
+  "ديالى": ["بعقوبة","المقدادية","الخالص","خانقين","بلدروز","مندلي","كفري","المنصورية"],
+  "صلاح الدين": ["تكريت","سامراء","بيجي","بلد","الدجيل","الضلوعية","الشرقاط","الدور","طوزخورماتو","العلم","آمرلي"],
+  "دهوك": ["دهوك","زاخو","سميل","العمادية","عقرة","الشيخان","بردرش","باتيفا"],
+  "ميسان": ["العمارة","الكحلاء","المجر الكبير","قلعة صالح","الميمونة","علي الغربي","الكميت"],
+  "حلبجة": ["حلبجة","خورمال","سيروان","بياره","بمو"]
+};
 
 /* ================================================
    أدوات مساعدة
@@ -407,8 +444,9 @@ function openProductModal(id){
   const p = PRODUCTS.find(x=>x.id===id);
   if (!p) return;
   currentProductId = id;
-  selectedSize = p.sizes[0] || null;
-  selectedColor = p.colors?.[0] || null;
+  // لا يوجد اختيار مبدئي — يجب على الزبون اختيار المقاس واللون بنفسه قبل تفعيل زر الإضافة للسلة
+  selectedSize = null;
+  selectedColor = null;
   selectedQty = 1;
 
   const images = getImages(p);
@@ -647,6 +685,13 @@ const Lightbox = (() => {
 })();
 
 
+/* يتحقق هل اختار الزبون كل الخيارات المطلوبة (مقاس/لون) قبل تفعيل زر الإضافة للسلة */
+function canAddToCart(p){
+  if (p.sizes?.length && !selectedSize) return false;
+  if (p.colors?.length && !selectedColor) return false;
+  return true;
+}
+
 function renderProductDetail(p){
   const el = document.getElementById("productDetail");
   const oldPriceHTML = p.oldPrice ? `<span class="product-detail-old">${formatPrice(p.oldPrice)}</span>` : "";
@@ -654,17 +699,21 @@ function renderProductDetail(p){
 
   // مقاسات
   const sizesHTML = p.sizes.length ? `
-    <div class="detail-label">المقاس:</div>
+    <div class="detail-label">المقاس: <span style="color:var(--ember)">*</span></div>
     <div class="size-picker" id="sizePicker">
       ${p.sizes.map(s=>`<button class="size-option ${String(selectedSize)===String(s)?"active":""}" data-size="${s}" onclick="selectSize(${s})">${s}</button>`).join("")}
     </div>` : "";
 
   // ألوان
   const colorsHTML = p.colors?.length ? `
-    <div class="detail-label">اللون:</div>
+    <div class="detail-label">اللون: <span style="color:var(--ember)">*</span></div>
     <div class="color-picker" id="colorPicker">
       ${p.colors.map(c=>`<button class="color-option ${selectedColor===c?"active":""}" data-color="${c}" onclick="selectColor('${c}')">${c}</button>`).join("")}
     </div>` : "";
+
+  const needsChoice = (p.sizes?.length && !selectedSize) || (p.colors?.length && !selectedColor);
+  const addDisabled = p.status === "out" || needsChoice;
+  const addLabel = needsChoice ? "اختر المقاس واللون أولاً" : "إضافة إلى السلة";
 
   el.innerHTML = `
     <div class="product-detail-cat">${p.category}</div>
@@ -687,9 +736,9 @@ function renderProductDetail(p){
       </div>
     </div>
     <div class="stock-note ${p.status}" style="margin-bottom:18px;">${dotSVG()} ${STATUS_TEXT[p.status]}</div>
-    ${p.status !== "out" ? `<button class="btn btn-primary detail-add-btn" onclick="addFromModal()">
+    ${p.status !== "out" ? `<button class="btn btn-primary detail-add-btn" id="addToCartDetailBtn" onclick="addFromModal()" ${addDisabled?"disabled":""}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.6 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6"/><circle cx="9" cy="21" r="1.4" fill="currentColor"/><circle cx="18" cy="21" r="1.4" fill="currentColor"/></svg>
-      إضافة إلى السلة
+      ${addLabel}
     </button>` : `<button class="btn btn-outline detail-add-btn" disabled>نفذ من المخزون</button>`}
     <button class="btn btn-whatsapp detail-add-btn" onclick="quickOrderWhatsapp('${p.id}')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
@@ -702,6 +751,7 @@ function selectSize(s){
   document.querySelectorAll(".size-option").forEach(b=>{
     b.classList.toggle("active", String(b.dataset.size)===String(s));
   });
+  refreshAddToCartState();
 }
 
 function selectColor(c){
@@ -709,6 +759,20 @@ function selectColor(c){
   document.querySelectorAll(".color-option").forEach(b=>{
     b.classList.toggle("active", b.dataset.color===c);
   });
+  refreshAddToCartState();
+}
+
+/* تحديث حالة زر الإضافة للسلة فوراً بعد كل اختيار، دون إعادة رسم الصفحة كاملة */
+function refreshAddToCartState(){
+  const p = PRODUCTS.find(x=>x.id===currentProductId);
+  if (!p) return;
+  const btn = document.getElementById("addToCartDetailBtn");
+  if (!btn) return;
+  const needsChoice = (p.sizes?.length && !selectedSize) || (p.colors?.length && !selectedColor);
+  btn.disabled = needsChoice;
+  btn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.6 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6"/><circle cx="9" cy="21" r="1.4" fill="currentColor"/><circle cx="18" cy="21" r="1.4" fill="currentColor"/></svg>
+      ${needsChoice ? "اختر المقاس واللون أولاً" : "إضافة إلى السلة"}`;
 }
 
 function changeDetailQty(d){
@@ -750,7 +814,7 @@ function openOrderModal(){
   const orderContent = document.getElementById("orderContent");
 
   // بناء ملخص الطلب
-  let total = 0;
+  let subtotal = 0;
   const itemsHTML = cart.map(item=>{
     const p = PRODUCTS.find(x=>x.id===item.id);
     if (!p) return "";
@@ -760,7 +824,7 @@ function openOrderModal(){
       : `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:var(--mist);border-radius:8px;">${(SHOE_ICONS[p.icon]||SHOE_ICONS.sneaker).replace('viewBox="0 0 200 120"','viewBox="0 0 200 120" width="36" height="36"')}</div>`;
 
     const itemTotal = p.price * item.qty;
-    total += itemTotal;
+    subtotal += itemTotal;
 
     let tags = [`رمز: ${p.code || p.id}`, `الكمية: ${item.qty}`];
     if (item.qty > 1 && item.pieces?.length){
@@ -793,9 +857,17 @@ function openOrderModal(){
       <div class="order-summary">
         <div class="order-summary-title">📦 ملخص الطلب</div>
         ${itemsHTML}
-        <div class="order-total">
+        <div class="order-total order-subtotal-row">
+          <span>المجموع الفرعي</span>
+          <span id="ordSubtotalVal">${formatPrice(subtotal)}</span>
+        </div>
+        <div class="order-total order-delivery-row">
+          <span>أجور التوصيل</span>
+          <span id="ordDeliveryVal">—</span>
+        </div>
+        <div class="order-total order-grand-row">
           <span>المجموع الكلي</span>
-          <span>${formatPrice(total)}</span>
+          <span id="ordGrandVal">${formatPrice(subtotal)}</span>
         </div>
       </div>
 
@@ -811,28 +883,43 @@ function openOrderModal(){
         <div class="order-field-row">
           <div class="order-field">
             <label>المحافظة <span style="color:var(--ember)">*</span></label>
-            <select id="ordProvince" required>
+            <select id="ordProvince" required onchange="onProvinceChange()">
               <option value="">اختر المحافظة</option>
               ${provincesHTML}
             </select>
           </div>
           <div class="order-field">
-            <label>القضاء أو الناحية</label>
-            <input type="text" id="ordDistrict" placeholder="مثال: الكرخ">
+            <label>القضاء <span style="color:var(--ember)">*</span></label>
+            <select id="ordDistrict" required onchange="onDistrictChange()" disabled>
+              <option value="">اختر المحافظة أولاً</option>
+            </select>
           </div>
         </div>
         <div class="order-field">
           <label>أقرب نقطة دالة</label>
-          <input type="text" id="ordLandmark" placeholder="مثال: قرب سوق الحرامية">
+          <input type="text" id="ordLandmark" placeholder="مثال: قرب جامع، مدرسة، محطة وقود...">
         </div>
         <div class="order-field">
           <label>ملاحظات إضافية (اختياري)</label>
           <textarea id="ordNotes" rows="2" placeholder="أي تفاصيل أخرى..."></textarea>
         </div>
+        <div class="order-field">
+          <label>طريقة إرسال الطلب</label>
+          <div class="send-method-row">
+            <button type="button" class="send-method-btn active" id="sendMethodWa" onclick="setSendMethod('whatsapp')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
+              واتساب
+            </button>
+            <button type="button" class="send-method-btn" id="sendMethodFb" onclick="setSendMethod('messenger')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.27c0 2.91 1.44 5.51 3.7 7.21V22l3.38-1.86c.9.25 1.86.38 2.92.38 5.52 0 10-4.15 10-9.27S17.52 2 12 2Zm1.04 12.48-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82Z"/></svg>
+              ماسنجر
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="order-modal-foot">
-      <button class="btn btn-whatsapp" onclick="sendOrderWithInvoice()">
+      <button class="btn btn-whatsapp" id="orderSendBtn" onclick="sendOrderWithInvoice()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
         إرسال الطلب عبر واتساب
       </button>
@@ -844,6 +931,72 @@ function openOrderModal(){
 
   orderOverlay.classList.add("open");
   document.body.style.overflow = "hidden";
+}
+
+/* اختيار طريقة الإرسال (واتساب / ماسنجر) */
+let SEND_METHOD = "whatsapp";
+function setSendMethod(method){
+  SEND_METHOD = method;
+  document.getElementById("sendMethodWa")?.classList.toggle("active", method==="whatsapp");
+  document.getElementById("sendMethodFb")?.classList.toggle("active", method==="messenger");
+  const sendBtn = document.getElementById("orderSendBtn");
+  if (sendBtn){
+    sendBtn.classList.toggle("btn-whatsapp", method==="whatsapp");
+    sendBtn.classList.toggle("btn-messenger", method==="messenger");
+    sendBtn.innerHTML = method==="whatsapp"
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg> إرسال الطلب عبر واتساب`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.27c0 2.91 1.44 5.51 3.7 7.21V22l3.38-1.86c.9.25 1.86.38 2.92.38 5.52 0 10-4.15 10-9.27S17.52 2 12 2Zm1.04 12.48-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82Z"/></svg> إرسال الطلب عبر ماسنجر`;
+  }
+}
+
+/* عند اختيار المحافظة: تعبئة قائمة الأقضية التابعة لها */
+function onProvinceChange(){
+  const provinceEl = document.getElementById("ordProvince");
+  const districtEl = document.getElementById("ordDistrict");
+  const province = provinceEl?.value || "";
+  const districts = IRAQ_DISTRICTS[province] || [];
+
+  if (!districtEl) return;
+  if (!province || !districts.length){
+    districtEl.innerHTML = `<option value="">اختر المحافظة أولاً</option>`;
+    districtEl.disabled = true;
+  } else {
+    districtEl.innerHTML = `<option value="">اختر القضاء</option>` +
+      districts.map(d=>`<option value="${d}">${d}</option>`).join("");
+    districtEl.disabled = false;
+  }
+  updateOrderTotals();
+}
+
+function onDistrictChange(){
+  updateOrderTotals();
+}
+
+/* تحديث المجموع الفرعي + أجور التوصيل + المجموع الكلي حسب المحافظة/القضاء المختارين */
+function updateOrderTotals(){
+  const cart = getCart();
+  let subtotal = 0;
+  cart.forEach(item=>{
+    const p = PRODUCTS.find(x=>x.id===item.id);
+    if (p) subtotal += p.price * item.qty;
+  });
+
+  const province = document.getElementById("ordProvince")?.value || "";
+  const district = document.getElementById("ordDistrict")?.value || "";
+  const deliveryEl = document.getElementById("ordDeliveryVal");
+  const grandEl = document.getElementById("ordGrandVal");
+  const subtotalEl = document.getElementById("ordSubtotalVal");
+  if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+
+  if (!province || !district){
+    if (deliveryEl) deliveryEl.textContent = "يُحدّد بعد اختيار المنطقة";
+    if (grandEl) grandEl.textContent = formatPrice(subtotal);
+    return;
+  }
+
+  const fee = calcDeliveryFee(province, district);
+  if (deliveryEl) deliveryEl.textContent = formatPrice(fee);
+  if (grandEl) grandEl.textContent = formatPrice(subtotal + fee);
 }
 
 /* قراءة بيانات العميل من النموذج وحفظها — يتم استدعاؤها قبل تحويل النافذة لعرض الفاتورة
@@ -862,7 +1015,7 @@ function readOrderFields(){
       name: nameEl?.value.trim()||"",
       phone: phoneEl?.value.trim()||"",
       province: provinceEl?.value||"",
-      district: districtEl?.value.trim()||"",
+      district: districtEl?.value||"",
       landmark: landmarkEl?.value.trim()||"",
       notes: notesEl?.value.trim()||""
     };
@@ -877,8 +1030,10 @@ async function sendOrderWithInvoice(){
   const fields = readOrderFields();
   if (!fields.phone){ alert("الرجاء إدخال رقم الهاتف"); return; }
   if (!fields.province){ alert("الرجاء اختيار المحافظة"); return; }
+  if (!fields.district){ alert("الرجاء اختيار القضاء"); return; }
   showInvoice();
-  await shareInvoiceToWhatsapp();
+  if (SEND_METHOD === "messenger") sendOrderMessenger();
+  else await shareInvoiceToWhatsapp();
 }
 
 function closeOrderModal(){
@@ -892,15 +1047,16 @@ function buildOrderText(){
 
   if (!phone){ alert("الرجاء إدخال رقم الهاتف"); return null; }
   if (!province){ alert("الرجاء اختيار المحافظة"); return null; }
+  if (!district){ alert("الرجاء اختيار القضاء"); return null; }
 
-  let total = 0;
+  let subtotal = 0;
   let msg = `🌹 *طلب جديد من متجر خطوة*\n`;
   msg += `━━━━━━━━━━━━━━━━━\n`;
   msg += `👤 *بيانات العميل*\n`;
   if (name) msg += `الاسم: ${name}\n`;
   msg += `الهاتف: ${phone}\n`;
   msg += `المحافظة: ${province}\n`;
-  if (district) msg += `القضاء/الناحية: ${district}\n`;
+  msg += `القضاء: ${district}\n`;
   if (landmark) msg += `أقرب نقطة: ${landmark}\n`;
   msg += `\n📦 *تفاصيل الطلب*\n`;
 
@@ -908,7 +1064,7 @@ function buildOrderText(){
     const p = PRODUCTS.find(x=>x.id===item.id);
     if (!p) return;
     const itemTotal = p.price * item.qty;
-    total += itemTotal;
+    subtotal += itemTotal;
     msg += `━━━━━━━━━━━━━━━━━\n`;
     msg += `👟 ${p.name}\n`;
     msg += `رمز المنتج: ${p.code || p.id}\n`;
@@ -929,8 +1085,11 @@ function buildOrderText(){
     msg += `المجموع: ${formatPrice(itemTotal)}\n`;
   });
 
+  const deliveryFee = calcDeliveryFee(province, district);
   msg += `━━━━━━━━━━━━━━━━━\n`;
-  msg += `💰 *المجموع الكلي: ${formatPrice(total)}*\n`;
+  msg += `المجموع الفرعي: ${formatPrice(subtotal)}\n`;
+  msg += `أجور التوصيل: ${formatPrice(deliveryFee)}\n`;
+  msg += `💰 *المجموع الكلي: ${formatPrice(subtotal + deliveryFee)}*\n`;
   if (notes) msg += `\n📝 ملاحظات: ${notes}\n`;
   msg += `\n🚚 الدفع عند الاستلام`;
   return msg;
@@ -942,17 +1101,89 @@ function sendOrderWhatsapp(){
   window.open(`https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`);
 }
 
+function sendOrderMessenger(){
+  const text = buildOrderText();
+  if (!text) return;
+  window.open(`${MESSENGER_LINK}?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+/* ================================================
+   نقل الطلب إلى لوحة التحكم
+   نظراً لأن الموقع العام لا يحتوي على توكن GitHub (لأسباب أمنية)، لا يمكنه
+   حفظ الطلب مباشرة بالريبو. بدلاً من ذلك نبني "كود طلب" نصياً يحتوي كل
+   بيانات الطلب، يقوم الزبون أو صاحب المتجر بنسخه ولصقه داخل لوحة التحكم
+   التي تقرأه وتحفظه بالريبو باستخدام التوكن الموجود هناك فقط. */
+const ORDER_CODE_PREFIX = "KHATWA-ORDER:";
+
+function buildOrderRecord(){
+  const cart = getCart();
+  const { name, phone, province, district, landmark, notes } = readOrderFields();
+  if (!phone || !province || !district) return null;
+
+  let subtotal = 0;
+  const items = cart.map(item=>{
+    const p = PRODUCTS.find(x=>x.id===item.id);
+    if (!p) return null;
+    const itemTotal = p.price * item.qty;
+    subtotal += itemTotal;
+    return {
+      name: p.name,
+      code: p.code || p.id,
+      image: getImages(p)[0] || "",
+      price: p.price,
+      qty: item.qty,
+      size: item.size || "",
+      color: item.color || "",
+      pieces: item.pieces || [],
+      total: itemTotal
+    };
+  }).filter(Boolean);
+
+  const deliveryFee = calcDeliveryFee(province, district);
+
+  return {
+    id: "ORD-" + Date.now(),
+    date: new Date().toISOString(),
+    customer: { name, phone, province, district, landmark, notes },
+    items,
+    subtotal,
+    deliveryFee,
+    total: subtotal + deliveryFee
+  };
+}
+
+/* ينسخ كود الطلب إلى الحافظة حتى يُلصق داخل لوحة التحكم لاحقاً */
+async function copyOrderForAdmin(){
+  const record = buildOrderRecord();
+  if (!record){ alert("تعذّر نسخ بيانات الطلب — تأكد من تعبئة الهاتف والمحافظة والقضاء."); return; }
+
+  const code = ORDER_CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(record))));
+  const btn = document.getElementById("copyOrderBtn");
+
+  try{
+    await navigator.clipboard.writeText(code);
+    if (btn){
+      const original = btn.innerHTML;
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> تم النسخ`;
+      setTimeout(()=>{ btn.innerHTML = original; }, 2200);
+    }
+  }catch(err){
+    // بديل في حال تعذّر الوصول لواجهة الحافظة (مثلاً متصفحات قديمة)
+    prompt("انسخ الكود التالي يدوياً والصقه في لوحة التحكم:", code);
+  }
+}
+
 function showInvoice(){
   const cart = getCart();
   const { name, phone, province, district, landmark } = readOrderFields();
 
-  let total = 0;
+  let subtotal = 0;
   const rows = cart.map(item=>{
     const p = PRODUCTS.find(x=>x.id===item.id);
     if (!p) return "";
     const images = getImages(p);
     const itemTotal = p.price * item.qty;
-    total += itemTotal;
+    subtotal += itemTotal;
 
     let variantText = "";
     if (item.qty > 1 && item.pieces?.length){
@@ -963,7 +1194,7 @@ function showInvoice(){
     }
 
     const thumb = images.length
-      ? `<img src="${images[0]}" alt="${p.name}" style="width:46px;height:46px;object-fit:cover;border-radius:6px;">`
+      ? `<img src="${images[0]}" alt="${p.name}" crossorigin="anonymous" style="width:46px;height:46px;object-fit:cover;border-radius:6px;">`
       : `<div style="width:46px;height:46px;background:var(--mist);border-radius:6px;display:flex;align-items:center;justify-content:center;">${(SHOE_ICONS[p.icon]||SHOE_ICONS.sneaker).replace('viewBox="0 0 200 120"','viewBox="0 0 200 120" width="36" height="36"')}</div>`;
 
     return `<tr>
@@ -975,6 +1206,9 @@ function showInvoice(){
       <td data-label="المجموع" style="font-weight:700;">${formatPrice(itemTotal)}</td>
     </tr>`;
   }).join("");
+
+  const deliveryFee = (province && district) ? calcDeliveryFee(province, district) : 0;
+  const grandTotal = subtotal + deliveryFee;
 
   const orderContent = document.getElementById("orderContent");
   const now = new Date();
@@ -1008,9 +1242,17 @@ function showInvoice(){
         <tbody>${rows}</tbody>
       </table>
 
+      <div class="invoice-total-row" style="border-top:none;padding-top:4px;">
+        <span style="font-size:12px;color:var(--ink-soft);">المجموع الفرعي</span>
+        <span style="font-size:13px;color:var(--ink-soft);">${formatPrice(subtotal)}</span>
+      </div>
+      <div class="invoice-total-row" style="border-top:none;padding-top:0;">
+        <span style="font-size:12px;color:var(--ink-soft);">أجور التوصيل</span>
+        <span style="font-size:13px;color:var(--ink-soft);">${formatPrice(deliveryFee)}</span>
+      </div>
       <div class="invoice-total-row">
         <span class="invoice-total-label">المجموع الكلي</span>
-        <span class="invoice-total-val">${formatPrice(total)}</span>
+        <span class="invoice-total-val">${formatPrice(grandTotal)}</span>
       </div>
 
       ${(name||phone||province) ? `<div class="invoice-customer">
@@ -1024,9 +1266,13 @@ function showInvoice(){
       </div>` : ""}
     </div>
     <div class="order-modal-foot">
-      <button class="btn btn-whatsapp" id="invoiceWaShareBtn" onclick="shareInvoiceToWhatsapp()">
+      <button class="btn ${SEND_METHOD==='messenger'?'btn-messenger':'btn-whatsapp'}" id="invoiceWaShareBtn" onclick="shareInvoiceToWhatsapp()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
-        إرسال الفاتورة عبر واتساب
+        إرسال الفاتورة عبر ${SEND_METHOD==='messenger'?'ماسنجر':'واتساب'}
+      </button>
+      <button class="btn btn-outline" id="copyOrderBtn" onclick="copyOrderForAdmin()" title="انسخ بيانات الطلب لتلصقها في لوحة التحكم">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        نسخ بيانات الطلب للوحة التحكم
       </button>
       <div class="invoice-export-row">
         <button class="btn btn-outline" onclick="downloadInvoiceImage('png')">PNG</button>
@@ -1038,53 +1284,83 @@ function showInvoice(){
   document.getElementById("orderModalTitle").textContent = "الفاتورة";
 }
 
-/* تحويل الفاتورة إلى صورة وتنزيلها بصيغة PNG أو JPG */
+/* تحويل الفاتورة إلى صورة وتنزيلها بصيغة PNG أو JPG
+   ملاحظة مهمة: صور المنتجات قد تكون محمّلة من نطاق مختلف (مثل GitHub) لذلك
+   نستخدم useCORS لتفادي تلوّث الـ canvas (tainted canvas) الذي كان يمنع تصدير
+   الصورة بصمت ويُفشل إرسال الفاتورة عبر واتساب دون أي رسالة واضحة للمستخدم */
 async function renderInvoiceCanvas(){
   const el = document.getElementById("invoiceContent");
   if (!el || typeof html2canvas === "undefined") return null;
-  return await html2canvas(el, { scale: 2, backgroundColor: "#ffffff" });
+  // نضمن أن كل صور الفاتورة تحمل crossOrigin قبل التصوير حتى لا تُلوّث الـ canvas
+  el.querySelectorAll("img").forEach(img => {
+    if (!img.crossOrigin) img.crossOrigin = "anonymous";
+  });
+  return await html2canvas(el, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    allowTaint: false,
+    imageTimeout: 8000
+  });
 }
 
 async function downloadInvoiceImage(type){
-  const canvas = await renderInvoiceCanvas();
-  if (!canvas){ alert("تعذّر إنشاء صورة الفاتورة، استخدم خيار الطباعة / PDF."); return; }
-  const mime = type === "jpg" ? "image/jpeg" : "image/png";
-  const link = document.createElement("a");
-  link.download = `فاتورة-خطوة.${type}`;
-  link.href = canvas.toDataURL(mime, 0.95);
-  link.click();
+  try{
+    const canvas = await renderInvoiceCanvas();
+    if (!canvas) throw new Error("no-canvas");
+    const mime = type === "jpg" ? "image/jpeg" : "image/png";
+    const link = document.createElement("a");
+    link.download = `فاتورة-خطوة.${type}`;
+    link.href = canvas.toDataURL(mime, 0.95);
+    link.click();
+  }catch(err){
+    alert("تعذّر إنشاء صورة الفاتورة كملف بسبب مصدر إحدى الصور. يمكنك استخدام خيار الطباعة / PDF بدلاً من ذلك.");
+  }
 }
 
-/* محاولة إرفاق صورة الفاتورة تلقائياً عند الإرسال للواتساب.
-   ملاحظة: روابط wa.me لا تدعم إرفاق ملفات تلقائياً (قيد من واتساب نفسه)،
+/* محاولة إرفاق صورة الفاتورة تلقائياً عند الإرسال للواتساب أو الماسنجر.
+   ملاحظة: روابط wa.me وm.me لا تدعم إرفاق ملفات تلقائياً (قيد من واتساب وماسنجر أنفسهم)،
    لذلك نستخدم مشاركة الملفات عبر نظام الجهاز (Web Share API) إن كان متوفراً،
-   وإن تعذّر ذلك نوفر تحميل الصورة يدوياً ثم نفتح محادثة واتساب لإرسالها. */
+   وإن تعذّر ذلك نوفر تحميل الصورة يدوياً ثم نفتح المحادثة لإرسالها. */
 async function shareInvoiceToWhatsapp(){
   const btn = document.getElementById("invoiceWaShareBtn");
   const originalLabel = btn?.innerHTML;
+  const openChat = SEND_METHOD === "messenger" ? sendOrderMessenger : sendOrderWhatsapp;
   if (btn){ btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> جارٍ التحضير...`; }
 
   try{
     const canvas = await renderInvoiceCanvas();
+
     if (canvas && navigator.canShare){
-      const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
-      const file = new File([blob], "فاتورة-خطوة.png", { type: "image/png" });
-      if (navigator.canShare({ files: [file] })){
-        await navigator.share({ files: [file], title: "فاتورة طلب من متجر خطوة", text: buildOrderText() || "" });
-        return;
+      try{
+        const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("toBlob failed")), "image/png"));
+        const file = new File([blob], "فاتورة-خطوة.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })){
+          await navigator.share({ files: [file], title: "فاتورة طلب من متجر خطوة", text: buildOrderText() || "" });
+          return;
+        }
+      }catch(shareErr){
+        // تعذّرت المشاركة المباشرة (مثلاً تلوّث الـ canvas أو رفض المستخدم) — ننتقل للبديل أدناه
       }
     }
-    // بديل: تنزيل الصورة وفتح واتساب لإرسالها يدوياً
+
+    // بديل: تنزيل الصورة وفتح واتساب/ماسنجر لإرسالها يدوياً
     if (canvas){
-      const link = document.createElement("a");
-      link.download = "فاتورة-خطوة.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      try{
+        const link = document.createElement("a");
+        link.download = "فاتورة-خطوة.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        alert("تم تحميل صورة الفاتورة على جهازك. سيتم الآن فتح المحادثة — يرجى إرفاق الصورة المُحمّلة يدوياً مع الرسالة.");
+      }catch(exportErr){
+        alert("تعذّر إرفاق صورة الفاتورة تلقائياً بسبب مصدر إحدى صور المنتجات. سيتم فتح المحادثة بنص الطلب، ويمكنك إرفاق الصورة يدوياً عبر زر PNG/JPG أو خيار الطباعة.");
+      }
+    } else {
+      alert("سيتم فتح المحادثة بنص الطلب كاملاً. لإرفاق صورة الفاتورة، استخدم زر PNG أو JPG أدناه ثم أرفقها يدوياً.");
     }
-    alert("تم تحميل صورة الفاتورة على جهازك. سيتم الآن فتح واتساب — يرجى إرفاق الصورة المُحمّلة يدوياً مع الرسالة.");
-    sendOrderWhatsapp();
+    openChat();
   }catch(err){
-    sendOrderWhatsapp();
+    openChat();
   }finally{
     if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
   }
@@ -1305,8 +1581,6 @@ async function init(){
   renderChips();
   populateSizeFilter();
   renderGrid("bestSellersGrid", PRODUCTS);
-  renderGrid("newArrivalsGrid", PRODUCTS.filter(p=>p.badge==="new"));
-  renderGrid("offersGrid", PRODUCTS.filter(p=>p.discount>0));
   setupEvents();
   updateCartBadge();
   observeReveals();

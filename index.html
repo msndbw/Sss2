@@ -31,8 +31,6 @@
     <nav class="main-nav" id="mainNav">
       <a href="#home" class="active">الرئيسية</a>
       <a href="#products">المنتجات</a>
-      <a href="#offers">العروض</a>
-      <a href="#reviews">آراء الزبائن</a>
       <a href="#" data-wa-general>تواصل معنا</a>
     </nav>
 
@@ -56,17 +54,13 @@
 <section class="hero" id="home">
   <div class="container hero-inner">
     <div>
+      <img src="images/logo.png" alt="خطوة" class="hero-logo">
       <span class="hero-eyebrow">⚡ تشكيلة جديدة كل أسبوع</span>
       <h1>خطوتك تبدأ <em>من هنا</em></h1>
       <p>أحذية وشحاطات رجالية أصلية بجودة عالية وأسعار منافسة — تصفّح، اختر مقاسك، واطلب مباشرة عبر واتساب دون أي تعقيد.</p>
       <div class="hero-ctas">
         <a href="#products" class="btn btn-primary">تسوّق الآن</a>
         <a href="#" class="btn btn-outline" data-wa-general>اسأل عبر واتساب</a>
-      </div>
-      <div class="hero-stats">
-        <div><b>+500</b><span>طلب منفّذ</span></div>
-        <div><b>+40</b><span>تصميم متوفر</span></div>
-        <div><b>4.8</b><span>تقييم العملاء</span></div>
       </div>
     </div>
 
@@ -113,59 +107,6 @@
   <div class="products-grid" id="bestSellersGrid"></div>
 </section>
 
-<!-- العروض -->
-<section class="offers-section" id="offers">
-  <div class="container">
-    <div class="section-head reveal">
-      <div>
-        <span class="eyebrow">لفترة محدودة</span>
-        <h2>عروض اليوم 🔥</h2>
-      </div>
-      <p>خصومات حقيقية على تشكيلة مختارة — احجز قبل النفاد</p>
-    </div>
-    <div class="products-grid" id="offersGrid"></div>
-  </div>
-</section>
-
-<!-- وصل حديثاً -->
-<section class="container" style="padding:70px 20px 10px;">
-  <div class="section-head reveal">
-    <div>
-      <span class="eyebrow">آخر إضافة للمتجر</span>
-      <h2>وصل حديثاً</h2>
-    </div>
-    <p>كن أول من يجرّب أحدث التصاميم</p>
-  </div>
-  <div class="products-grid" id="newArrivalsGrid"></div>
-</section>
-
-<!-- آراء الزبائن -->
-<section class="reviews container" id="reviews">
-  <div class="section-head reveal">
-    <div>
-      <span class="eyebrow">ثقة عملائنا</span>
-      <h2>آراء الزبائن</h2>
-    </div>
-  </div>
-  <div class="review-grid">
-    <div class="review-card reveal">
-      <div class="review-stars">★★★★★</div>
-      <p class="review-text">طلبت حذاء رياضي والتوصيل كان سريع والجودة فوق التوقعات، تواصل واتساب سهّل علي كل شي.</p>
-      <div class="review-by"><div class="review-avatar">ح</div><div><div class="review-name">حسين علي</div><div class="review-loc">بغداد</div></div></div>
-    </div>
-    <div class="review-card reveal">
-      <div class="review-stars">★★★★★</div>
-      <p class="review-text">الحذاء الكلاسيك الجلد كان نفس الصورة تماماً، ومقاسي كان دقيق. تعامل محترم وسريع.</p>
-      <div class="review-by"><div class="review-avatar">م</div><div><div class="review-name">مصطفى جبار</div><div class="review-loc">البصرة</div></div></div>
-    </div>
-    <div class="review-card reveal">
-      <div class="review-stars">★★★★★</div>
-      <p class="review-text">أسعار منطقية مقارنة بالجودة، وخدمة ما بعد البيع ممتازة. سأطلب مرة ثانية بكل تأكيد.</p>
-      <div class="review-by"><div class="review-avatar">ع</div><div><div class="review-name">علي كاظم</div><div class="review-loc">أربيل</div></div></div>
-    </div>
-  </div>
-</section>
-
 <!-- إحصائيات -->
 <section class="container">
   <div class="stats-strip reveal">
@@ -189,7 +130,6 @@
         <ul>
           <li><a href="#home">الرئيسية</a></li>
           <li><a href="#products">المنتجات</a></li>
-          <li><a href="#offers">العروض</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -204,6 +144,7 @@
         <h4>تواصل معنا</h4>
         <ul id="footerWa">
           <li><a href="#" data-wa-general>واتساب: 07857392727</a></li>
+          <li><a href="https://m.me/61590750916432" target="_blank" rel="noopener">مراسلة عبر ماسنجر</a></li>
         </ul>
         <div class="socials" id="socialsRow"></div>
       </div>
@@ -215,10 +156,15 @@
   </div>
 </footer>
 
-<!-- زر واتساب عائم -->
-<a href="#" class="float-whatsapp" data-wa-general aria-label="تواصل عبر واتساب">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
-</a>
+<!-- أزرار التواصل العائمة -->
+<div class="float-contact-stack">
+  <a href="https://m.me/61590750916432" target="_blank" rel="noopener" class="float-messenger" aria-label="تواصل عبر ماسنجر">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.27c0 2.91 1.44 5.51 3.7 7.21V22l3.38-1.86c.9.25 1.86.38 2.92.38 5.52 0 10-4.15 10-9.27S17.52 2 12 2Zm1.04 12.48-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82Z"/></svg>
+  </a>
+  <a href="#" class="float-whatsapp" data-wa-general aria-label="تواصل عبر واتساب">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
+  </a>
+</div>
 
 <!-- ===== سلة المشتريات ===== -->
 <div class="cart-overlay" id="cartOverlay"></div>
