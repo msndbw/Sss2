@@ -288,6 +288,36 @@
       "rating": 4.4,
       "code": "KH-0012",
       "visible": true
+    },
+    {
+      "id": "p1781933799924",
+      "code": "KH-0013",
+      "name": "شحاطة جلد ايراني",
+      "category": "شحاطات",
+      "icon": "sneaker",
+      "image": "images/p1781933799924_1781933799924_0.jpg",
+      "images": [
+        "images/p1781933799924_1781933799924_0.jpg"
+      ],
+      "price": 10000,
+      "oldPrice": 12000,
+      "discount": 10,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        "اسود"
+      ],
+      "status": "available",
+      "badge": null,
+      "visible": true,
+      "description": "شحاطة رجالي جلد",
+      "rating": 4.5
     }
   ],
   "contact": {
