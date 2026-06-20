@@ -14,6 +14,7 @@ let currentProductId = null;
 let selectedSize = null;
 let selectedColor = null;
 let selectedQty = 1;
+let LAST_ORDER_FIELDS = null; /* نسخة محفوظة من بيانات العميل تبقى متاحة حتى بعد تحويل نافذة الطلب إلى عرض الفاتورة */
 
 function waNumber(){ return CONTACT.whatsapp || WHATSAPP_NUMBER; }
 
@@ -708,6 +709,7 @@ function openOrderModal(){
   const cart = getCart();
   if (!cart.length){ openCart(); return; }
   closeCart();
+  LAST_ORDER_FIELDS = null;
 
   const orderOverlay = document.getElementById("orderOverlay");
   const orderContent = document.getElementById("orderContent");
@@ -809,12 +811,37 @@ function openOrderModal(){
   document.body.style.overflow = "hidden";
 }
 
-/* إرسال الطلب مع محاولة إرفاق الفاتورة تلقائياً (يبني الفاتورة أولاً ثم يحاول مشاركتها كصورة) */
+/* قراءة بيانات العميل من النموذج وحفظها — يتم استدعاؤها قبل تحويل النافذة لعرض الفاتورة
+   حتى لا تُفقد القيم بعد إزالة الحقول من الصفحة (DOM) */
+function readOrderFields(){
+  const nameEl = document.getElementById("ordName");
+  const phoneEl = document.getElementById("ordPhone");
+  const provinceEl = document.getElementById("ordProvince");
+  const districtEl = document.getElementById("ordDistrict");
+  const landmarkEl = document.getElementById("ordLandmark");
+  const notesEl = document.getElementById("ordNotes");
+
+  // إن كانت حقول النموذج موجودة بالصفحة، نقرأ منها ونحدّث النسخة المحفوظة
+  if (phoneEl){
+    LAST_ORDER_FIELDS = {
+      name: nameEl?.value.trim()||"",
+      phone: phoneEl?.value.trim()||"",
+      province: provinceEl?.value||"",
+      district: districtEl?.value.trim()||"",
+      landmark: landmarkEl?.value.trim()||"",
+      notes: notesEl?.value.trim()||""
+    };
+  }
+
+  // نعيد النسخة المحفوظة (سواء كانت حديثة أو من قبل، مثل حالة عرض الفاتورة بعد حذف النموذج)
+  return LAST_ORDER_FIELDS || { name:"", phone:"", province:"", district:"", landmark:"", notes:"" };
+}
+
+
 async function sendOrderWithInvoice(){
-  const phone = document.getElementById("ordPhone")?.value.trim()||"";
-  const province = document.getElementById("ordProvince")?.value||"";
-  if (!phone){ alert("الرجاء إدخال رقم الهاتف"); return; }
-  if (!province){ alert("الرجاء اختيار المحافظة"); return; }
+  const fields = readOrderFields();
+  if (!fields.phone){ alert("الرجاء إدخال رقم الهاتف"); return; }
+  if (!fields.province){ alert("الرجاء اختيار المحافظة"); return; }
   showInvoice();
   await shareInvoiceToWhatsapp();
 }
@@ -826,12 +853,7 @@ function closeOrderModal(){
 
 function buildOrderText(){
   const cart = getCart();
-  const name = document.getElementById("ordName")?.value.trim()||"";
-  const phone = document.getElementById("ordPhone")?.value.trim()||"";
-  const province = document.getElementById("ordProvince")?.value||"";
-  const district = document.getElementById("ordDistrict")?.value.trim()||"";
-  const landmark = document.getElementById("ordLandmark")?.value.trim()||"";
-  const notes = document.getElementById("ordNotes")?.value.trim()||"";
+  const { name, phone, province, district, landmark, notes } = readOrderFields();
 
   if (!phone){ alert("الرجاء إدخال رقم الهاتف"); return null; }
   if (!province){ alert("الرجاء اختيار المحافظة"); return null; }
@@ -887,11 +909,7 @@ function sendOrderWhatsapp(){
 
 function showInvoice(){
   const cart = getCart();
-  const name = document.getElementById("ordName")?.value.trim()||"";
-  const phone = document.getElementById("ordPhone")?.value.trim()||"";
-  const province = document.getElementById("ordProvince")?.value||"";
-  const district = document.getElementById("ordDistrict")?.value.trim()||"";
-  const landmark = document.getElementById("ordLandmark")?.value.trim()||"";
+  const { name, phone, province, district, landmark } = readOrderFields();
 
   let total = 0;
   const rows = cart.map(item=>{
@@ -915,11 +933,11 @@ function showInvoice(){
 
     return `<tr>
       <td class="td-thumb">${thumb}</td>
-      <td>${p.name}<br><span style="font-size:10px;color:var(--ink-soft);">${p.code || p.id}</span></td>
-      <td style="color:var(--ink-soft);font-size:11px;">${variantText}</td>
-      <td>${item.qty}</td>
-      <td>${formatPrice(p.price)}</td>
-      <td style="font-weight:700;">${formatPrice(itemTotal)}</td>
+      <td data-label="المنتج">${p.name}<br><span style="font-size:10px;color:var(--ink-soft);">${p.code || p.id}</span></td>
+      <td data-label="التفاصيل" style="color:var(--ink-soft);font-size:11px;">${variantText}</td>
+      <td data-label="الكمية">${item.qty}</td>
+      <td data-label="السعر">${formatPrice(p.price)}</td>
+      <td data-label="المجموع" style="font-weight:700;">${formatPrice(itemTotal)}</td>
     </tr>`;
   }).join("");
 

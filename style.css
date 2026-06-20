@@ -1842,4 +1842,66 @@ input,textarea,select{font-family:inherit;}
   .order-modal-foot{padding:14px 18px;}
   .product-detail{padding:20px 18px;}
   .admin-stats{grid-template-columns:repeat(2,1fr);}
+
+  /* فاتورة — تنسيق متجاوب على الهواتف */
+  .order-overlay{padding:0;align-items:stretch;}
+  .order-modal{max-width:100%;width:100%;min-height:100%;border-radius:0;margin:0;}
+
+  .invoice-wrap{padding:16px;}
+  .invoice-header{
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+    padding-bottom:12px;
+  }
+  .invoice-logo{font-size:21px;}
+  .invoice-meta{text-align:right;font-size:11px;}
+  .invoice-meta b{font-size:12.5px;}
+
+  /* الجدول: نلغي تخطيط الصفوف ونحوّله لبطاقات مكدّسة لتفادي الانضغاط الأفقي */
+  .invoice-table thead{display:none;}
+  .invoice-table, .invoice-table tbody, .invoice-table tr, .invoice-table td{display:block;width:100%;}
+  .invoice-table{margin-bottom:12px;}
+  .invoice-table tr{
+    display:grid;
+    grid-template-columns:44px 1fr;
+    gap:4px 10px;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .invoice-table td{
+    padding:0;
+    border-bottom:none;
+    font-size:12.5px;
+  }
+  .invoice-table td[data-label]:not(:empty)::before{
+    content:attr(data-label) ": ";
+    font-family:var(--font-display);
+    font-weight:700;
+    color:var(--ink-soft);
+    font-size:10.5px;
+  }
+  .invoice-table td[data-label="التفاصيل"]:empty{display:none;}
+  .invoice-table .td-thumb{grid-row:1 / span 4;width:44px;}
+  .invoice-table .td-thumb img,
+  .invoice-table .td-thumb .icon-ph{width:44px;height:44px;}
+
+  .invoice-total-row{padding:10px 0;gap:14px;}
+  .invoice-total-label{font-size:13px;}
+  .invoice-total-val{font-size:16px;}
+
+  .invoice-customer{padding:12px;}
+  .invoice-customer p{font-size:11.5px;line-height:1.8;}
+
+  .invoice-export-row{flex-wrap:wrap;}
+  .invoice-export-row .btn{flex:1 1 30%;padding:10px 6px;font-size:11.5px;}
+}
+
+@media (max-width: 380px){
+  .invoice-wrap{padding:12px;}
+  .invoice-table tr{grid-template-columns:38px 1fr;}
+  .invoice-table .td-thumb{width:38px;}
+  .invoice-table .td-thumb img,
+  .invoice-table .td-thumb .icon-ph{width:38px;height:38px;}
 }
