@@ -9,17 +9,60 @@
   ],
   "products": [
     {
-      "id": "p1781869129108",
-      "name": "سكجر اصبع طبي اصلي",
-      "category": "شحاطات",
+      "id": "p1",
+      "name": "حذاء رياضي أسود",
+      "category": "رياضي",
       "icon": "sneaker",
-      "image": "images/p1781869129108_1781869129108_0.jpg",
-      "images": [
-        "images/p1781869129108_1781869129108_0.jpg",
-        "images/p1781869129108_1781869130953_1.jpg"
+      "image": "",
+      "price": 45000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
       ],
-      "price": 10000,
-      "oldPrice": 120000,
+      "status": "available",
+      "badge": "bestseller",
+      "description": "حذاء رياضي مريح بتصميم عصري، مناسب للاستخدام اليومي والرياضة الخفيفة. نعل مرن وتهوية ممتازة.",
+      "rating": 4.7,
+      "code": "KH-0001",
+      "visible": true
+    },
+    {
+      "id": "p2",
+      "name": "شحاط كاجوال بني",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 25000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "limited",
+      "badge": null,
+      "description": "شحاط جلد طبيعي بلون بني، خفيف ومريح، مثالي للصيف والاستخدام المنزلي والخارجي.",
+      "rating": 4.4,
+      "code": "KH-0002",
+      "visible": true
+    },
+    {
+      "id": "p3",
+      "name": "حذاء كلاسيك جلد أسود",
+      "category": "كلاسيك",
+      "icon": "classic",
+      "image": "",
+      "price": 60000,
+      "oldPrice": 75000,
       "discount": 20,
       "sizes": [
         40,
@@ -29,24 +72,92 @@
         44,
         45
       ],
-      "colors": [],
-      "status": "out",
-      "badge": "bestseller",
-      "description": "شحاطة رجالي اصبع سكجر اصلي",
-      "rating": 4.5
+      "status": "available",
+      "badge": "offer",
+      "description": "حذاء كلاسيك جلد طبيعي فاخر، مناسب للمناسبات الرسمية والعمل. خياطة متينة وتفصيل أنيق.",
+      "rating": 4.9,
+      "code": "KH-0003",
+      "visible": true
     },
     {
-      "id": "p1781869292666",
-      "name": "شحاطة لاستيك كعب إيفا سيرين",
-      "category": "شحاطات",
+      "id": "p4",
+      "name": "حذاء رياضي أبيض",
+      "category": "رياضي",
       "icon": "sneaker",
-      "image": "images/p1781869292666_1781869292666_0.jpg",
-      "images": [
-        "images/p1781869292666_1781869292666_0.jpg"
+      "image": "",
+      "price": 50000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
       ],
-      "price": 5000,
-      "oldPrice": 6000,
-      "discount": 10,
+      "status": "available",
+      "badge": "new",
+      "description": "تصميم سنيكرز أبيض نظيف يناسب جميع الملابس، خامة قابلة للتنفس وراحة طوال اليوم.",
+      "rating": 4.6,
+      "code": "KH-0004",
+      "visible": true
+    },
+    {
+      "id": "p5",
+      "name": "شحاط رياضي",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 20000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "status": "out",
+      "badge": null,
+      "description": "شحاط رياضي بحزام قابل للتعديل، نعل مانع للانزلاق ومناسب للاستخدام الخارجي.",
+      "rating": 4.2,
+      "code": "KH-0005",
+      "visible": true
+    },
+    {
+      "id": "p6",
+      "name": "حذاء كاجوال سويدي",
+      "category": "كاجوال",
+      "icon": "classic",
+      "image": "",
+      "price": 40000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "available",
+      "badge": null,
+      "description": "حذاء كاجوال من خامة السويد الناعمة، يجمع بين الراحة والمظهر العصري.",
+      "rating": 4.5,
+      "code": "KH-0006",
+      "visible": true
+    },
+    {
+      "id": "p7",
+      "name": "حذاء جري خفيف",
+      "category": "رياضة جري",
+      "icon": "running",
+      "image": "",
+      "price": 55000,
+      "oldPrice": null,
+      "discount": 0,
       "sizes": [
         40,
         41,
@@ -55,15 +166,136 @@
         44,
         45
       ],
-      "colors": [
-        "اسود",
-        "جوزي",
-        "قاعدة اسود سير أبيض"
+      "status": "available",
+      "badge": "new",
+      "description": "حذاء جري خفيف الوزن بتقنية امتصاص الصدمات، مثالي للجري والتمارين الرياضية.",
+      "rating": 4.8,
+      "code": "KH-0007",
+      "visible": true
+    },
+    {
+      "id": "p8",
+      "name": "حذاء كلاسيك بني",
+      "category": "كلاسيك",
+      "icon": "classic",
+      "image": "",
+      "price": 58000,
+      "oldPrice": 68000,
+      "discount": 15,
+      "sizes": [
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "available",
+      "badge": "offer",
+      "description": "حذاء كلاسيك بني أنيق مناسب للعمل والمناسبات، جلد عالي الجودة وتصميم يدوم.",
+      "rating": 4.6,
+      "code": "KH-0008",
+      "visible": true
+    },
+    {
+      "id": "p9",
+      "name": "شحاط استيك أسود",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 15000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "status": "available",
+      "badge": "new",
+      "description": "شحاط استيك مطاطي خفيف الوزن، مقاوم للماء وسهل التنظيف، خيار عملي للاستخدام اليومي والمسبح.",
+      "rating": 4.3,
+      "code": "KH-0009",
+      "visible": true
+    },
+    {
+      "id": "p10",
+      "name": "شحاط طبي مرن",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 30000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "status": "available",
+      "badge": "new",
+      "description": "شحاط طبي بنعل مرن داعم للقدم يقلل الضغط عن الكعب والمفاصل، مناسب لمن يقضي وقتاً طويلاً واقفاً.",
+      "rating": 4.7,
+      "code": "KH-0010",
+      "visible": true
+    },
+    {
+      "id": "p11",
+      "name": "شبشب منزلي جديد",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 18000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "available",
+      "badge": "new",
+      "description": "شبشب منزلي بتصميم جديد، تنجيد ناعم من الداخل ونعل مانع للانزلاق، راحة فائقة للبيت.",
+      "rating": 4.5,
+      "code": "KH-0011",
+      "visible": true
+    },
+    {
+      "id": "p12",
+      "name": "شحاط استيك مزدوج الحزام",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 22000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        41,
+        42,
+        43,
+        44,
+        45
       ],
       "status": "limited",
       "badge": null,
-      "description": "شحاطة خفيفة لاستيك تحتوي على مجموعة من الأوان",
-      "rating": 4.5
+      "description": "شحاط استيك بحزامين قابلين للتعديل لثبات أفضل، مناسب للخروج اليومي والاستخدام الرياضي الخفيف.",
+      "rating": 4.4,
+      "code": "KH-0012",
+      "visible": true
     }
-  ]
+  ],
+  "contact": {
+    "whatsapp": "9647857392727",
+    "phone": "",
+    "facebook": "",
+    "instagram": "",
+    "tiktok": "",
+    "telegram": ""
+  }
 }

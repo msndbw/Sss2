@@ -202,12 +202,10 @@
       </div>
       <div class="footer-col">
         <h4>تواصل معنا</h4>
-        <ul>
+        <ul id="footerWa">
           <li><a href="#" data-wa-general>واتساب: 07857392727</a></li>
         </ul>
-        <div class="socials">
-          <a href="#" aria-label="انستغرام"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
-        </div>
+        <div class="socials" id="socialsRow"></div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -251,6 +249,9 @@
       <div class="product-gallery">
         <div class="gallery-main" id="galleryMain">
           <div id="galleryMainContent"></div>
+          <button class="gallery-expand" id="galleryExpandBtn" aria-label="عرض بالحجم الكامل" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m11-5v3a2 2 0 0 1-2 2h-3"/></svg>
+          </button>
         </div>
         <div class="gallery-nav" id="galleryNav" style="display:none;">
           <button class="gallery-arrow" id="galleryPrev" aria-label="السابق">
@@ -280,6 +281,32 @@
   </div>
 </div>
 
+<!-- ===== صندوق عرض الصورة بالحجم الكامل (Lightbox) ===== -->
+<div class="lightbox-overlay" id="lightboxOverlay">
+  <div class="lightbox-stage" id="lightboxStage">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <button class="lightbox-close" id="lightboxClose" aria-label="إغلاق">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="lightbox-counter" id="lightboxCounter" style="display:none;"></div>
+  <div class="lightbox-nav" id="lightboxNav" style="display:none;">
+    <button class="lightbox-arrow" id="lightboxPrev" aria-label="السابق">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="lightbox-arrow" id="lightboxNext" aria-label="التالي">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="lightbox-zoomctrls">
+    <button id="lightboxZoomOut" aria-label="تصغير">−</button>
+    <button id="lightboxZoomReset" aria-label="إعادة الضبط">⤾</button>
+    <button id="lightboxZoomIn" aria-label="تكبير">+</button>
+  </div>
+  <div class="lightbox-hint">سحب للتنقل · قرص أو عجلة الفأرة للتكبير</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
