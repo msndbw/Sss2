@@ -46,6 +46,34 @@
       "visible": true,
       "description": "جلد أنواع",
       "rating": 4.5
+    },
+    {
+      "id": "p1781939220433",
+      "code": "KH-0014",
+      "name": "اصبع طبي اصلي",
+      "category": "شحاطات",
+      "icon": "sneaker",
+      "image": "images/p1781939220433_1781939220433_0.jpg",
+      "images": [
+        "images/p1781939220433_1781939220433_0.jpg"
+      ],
+      "price": 15000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [],
+      "status": "available",
+      "badge": null,
+      "visible": true,
+      "description": "جلد إصبع",
+      "rating": 4.5
     }
   ],
   "contact": {
