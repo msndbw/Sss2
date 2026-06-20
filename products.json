@@ -9,29 +9,6 @@
   ],
   "products": [
     {
-      "id": "p11",
-      "name": "شبشب منزلي جديد",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 18000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "شبشب منزلي بتصميم جديد، تنجيد ناعم من الداخل ونعل مانع للانزلاق، راحة فائقة للبيت.",
-      "rating": 4.5,
-      "code": "KH-0011",
-      "visible": true
-    },
-    {
       "id": "p12",
       "name": "شحاط استيك مزدوج الحزام",
       "category": "شحاطات",
