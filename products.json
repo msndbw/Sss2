@@ -9,30 +9,6 @@
   ],
   "products": [
     {
-      "id": "p1",
-      "name": "حذاء رياضي أسود",
-      "category": "رياضي",
-      "icon": "sneaker",
-      "image": "",
-      "price": 45000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "bestseller",
-      "description": "حذاء رياضي مريح بتصميم عصري، مناسب للاستخدام اليومي والرياضة الخفيفة. نعل مرن وتهوية ممتازة.",
-      "rating": 4.7,
-      "code": "KH-0001",
-      "visible": true
-    },
-    {
       "id": "p2",
       "name": "شحاط كاجوال بني",
       "category": "شحاطات",
