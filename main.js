@@ -75,6 +75,28 @@ function getImages(p){
 
 function dotSVG(){ return `<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>`; }
 
+/* تحميل صورة منتج على الجهاز — يجلب الصورة كـ blob لضمان نزولها كملف
+   بدل فتحها بتبويب جديد (يعمل مع الروابط النسبية وروابط GitHub Pages) */
+async function downloadImage(url, filename){
+  if (!url) return;
+  try{
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("fetch failed");
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename || "صورة-المنتج.jpg";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl), 4000);
+  }catch(err){
+    // بديل: فتح الصورة بتبويب جديد إن تعذّر التحميل المباشر (مثلاً بسبب CORS)
+    window.open(url, "_blank");
+  }
+}
+
 /* ================================================
    بطاقة المنتج
    ================================================ */
@@ -153,7 +175,12 @@ function applyFilters(){
 
   let list = cat === "الكل" ? [...PRODUCTS] : PRODUCTS.filter(p=>p.category===cat);
   if (sizeVal) list = list.filter(p=>p.sizes.map(String).includes(sizeVal));
-  if (searchQ) list = list.filter(p=>p.name.toLowerCase().includes(searchQ)||p.category.toLowerCase().includes(searchQ));
+  if (searchQ) list = list.filter(p=>
+    p.name.toLowerCase().includes(searchQ) ||
+    p.category.toLowerCase().includes(searchQ) ||
+    (p.code||"").toLowerCase().includes(searchQ) ||
+    (p.id||"").toLowerCase().includes(searchQ)
+  );
 
   if (sort === "price-asc") list.sort((a,b)=>a.price-b.price);
   else if (sort === "price-desc") list.sort((a,b)=>b.price-a.price);
@@ -406,11 +433,13 @@ function renderGallery(p){
   const thumbsEl = document.getElementById("galleryThumbs");
   const navEl = document.getElementById("galleryNav");
   const expandBtn = document.getElementById("galleryExpandBtn");
+  const downloadBtn = document.getElementById("galleryDownloadBtn");
 
   if (images.length){
     mainEl.innerHTML = `<img id="galleryMainImg" src="${images[currentGalleryIdx]}" alt="${p.name}">`;
     navEl.style.display = images.length > 1 ? "flex" : "none";
     if (expandBtn) expandBtn.style.display = "flex";
+    if (downloadBtn) downloadBtn.style.display = "flex";
     thumbsEl.innerHTML = images.map((img,i)=>`
       <div class="gallery-thumb ${i===0?"active":""}" data-gi="${i}">
         <img src="${img}" alt="">
@@ -419,6 +448,7 @@ function renderGallery(p){
     mainEl.innerHTML = SHOE_ICONS[p.icon]||SHOE_ICONS.sneaker;
     navEl.style.display = "none";
     if (expandBtn) expandBtn.style.display = "none";
+    if (downloadBtn) downloadBtn.style.display = "none";
     thumbsEl.innerHTML = "";
   }
 }
@@ -537,6 +567,11 @@ const Lightbox = (() => {
     document.getElementById("lightboxZoomIn").addEventListener("click", ()=>setScale(scale+0.6));
     document.getElementById("lightboxZoomOut").addEventListener("click", ()=>setScale(scale-0.6));
     document.getElementById("lightboxZoomReset").addEventListener("click", ()=>setScale(1));
+    document.getElementById("lightboxDownload")?.addEventListener("click", ()=>{
+      const url = images[idx];
+      const ext = (url.split(".").pop()||"jpg").split("?")[0].slice(0,4);
+      downloadImage(url, `صورة-${idx+1}.${ext}`);
+    });
 
     overlay.addEventListener("click", (e)=>{ if (e.target === overlay) close(); });
 
@@ -837,7 +872,7 @@ function readOrderFields(){
   return LAST_ORDER_FIELDS || { name:"", phone:"", province:"", district:"", landmark:"", notes:"" };
 }
 
-
+/* إرسال الطلب مع محاولة إرفاق الفاتورة تلقائياً (يبني الفاتورة أولاً ثم يحاول مشاركتها كصورة) */
 async function sendOrderWithInvoice(){
   const fields = readOrderFields();
   if (!fields.phone){ alert("الرجاء إدخال رقم الهاتف"); return; }
@@ -1140,7 +1175,7 @@ function setupEvents(){
 
   // فتح صندوق العرض الكامل للصورة عند الضغط على الصورة أو زر التكبير
   document.getElementById("galleryMain").addEventListener("click", (e)=>{
-    if (e.target.closest("#galleryExpandBtn")) return; // يُعالَج بشكل مستقل أدناه
+    if (e.target.closest("#galleryExpandBtn") || e.target.closest("#galleryDownloadBtn")) return; // تُعالَج بشكل مستقل أدناه
     const p = PRODUCTS.find(x=>x.id===currentProductId);
     if (!p) return;
     const images = getImages(p);
@@ -1152,6 +1187,16 @@ function setupEvents(){
     if (!p) return;
     const images = getImages(p);
     if (images.length) Lightbox.open(images, currentGalleryIdx);
+  });
+  document.getElementById("galleryDownloadBtn")?.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    const p = PRODUCTS.find(x=>x.id===currentProductId);
+    if (!p) return;
+    const images = getImages(p);
+    const url = images[currentGalleryIdx];
+    if (!url) return;
+    const ext = (url.split(".").pop()||"jpg").split("?")[0].slice(0,4);
+    downloadImage(url, `${p.code||p.id}-${currentGalleryIdx+1}.${ext}`);
   });
   setupGallerySwipe();
   Lightbox.bindEvents();

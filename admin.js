@@ -161,11 +161,47 @@ document.getElementById("imageInput").addEventListener("change", (e)=>{
 
 function renderImagePreviews(){
   const wrap = document.getElementById("multiImagesPreview");
-  wrap.innerHTML = pendingImages.map((img,i)=>`
+  wrap.innerHTML = pendingImages.map((img,i)=>{
+    const src = img.dataUrl||img.url||"";
+    return `
     <div class="multi-img-item">
-      <img src="${img.dataUrl||img.url||""}" alt="">
+      <img src="${src}" alt="">
       <span class="multi-img-del" onclick="removeImage(${i})">✕</span>
-    </div>`).join("");
+      ${src?`<span class="multi-img-download" onclick="downloadAdminImage(${i})" title="تحميل الصورة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg>
+      </span>`:""}
+    </div>`;
+  }).join("");
+}
+
+function downloadAdminImage(idx){
+  const img = pendingImages[idx];
+  if (!img) return;
+  const src = img.dataUrl || img.url || "";
+  if (!src) return;
+  const ext = (img.ext || "jpg").split("?")[0];
+  downloadImage(src, `صورة-${idx+1}.${ext}`);
+}
+
+/* تحميل صورة على الجهاز — يجلب الصورة كـ blob لضمان نزولها كملف
+   (يدعم أيضاً روابط data: المُولّدة من معاينة الصور قبل الرفع) */
+async function downloadImage(url, filename){
+  if (!url) return;
+  try{
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("fetch failed");
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename || "صورة.jpg";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl), 4000);
+  }catch(err){
+    window.open(url, "_blank");
+  }
 }
 
 function removeImage(idx){
@@ -514,7 +550,12 @@ async function loadProductsList(){
     if (searchEl){
       searchEl.addEventListener("input", ()=>{
         const q = searchEl.value.trim().toLowerCase();
-        const filtered = q ? adminProducts.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)) : adminProducts;
+        const filtered = q ? adminProducts.filter(p=>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.code||"").toLowerCase().includes(q) ||
+          (p.id||"").toLowerCase().includes(q)
+        ) : adminProducts;
         renderProductsList(filtered);
       });
     }
@@ -549,6 +590,9 @@ function renderProductsList(products){
             ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`
             : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`}
         </button>
+        ${images.length?`<button class="icon-action" data-download="${p.id}" aria-label="تحميل الصورة">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg>
+        </button>`:""}
         <button class="icon-action" data-edit="${p.id}" aria-label="تعديل">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
@@ -570,6 +614,16 @@ function renderProductsList(products){
   });
   wrap.querySelectorAll("[data-toggle]").forEach(btn=>{
     btn.addEventListener("click", ()=>toggleProductVisibility(btn.dataset.toggle));
+  });
+  wrap.querySelectorAll("[data-download]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const p = adminProducts.find(x=>x.id===btn.dataset.download);
+      if (!p) return;
+      const images = p.images?.length ? p.images : (p.image ? [p.image] : []);
+      if (!images.length) return;
+      const ext = (images[0].split(".").pop()||"jpg").split("?")[0].slice(0,4);
+      downloadImage(images[0], `${p.code||p.id}.${ext}`);
+    });
   });
 
   renderAdminStats();

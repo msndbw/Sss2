@@ -9,6 +9,53 @@
   ],
   "products": [
     {
+      "id": "p1",
+      "name": "حذاء رياضي أسود",
+      "category": "رياضي",
+      "icon": "sneaker",
+      "image": "",
+      "price": 45000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "status": "available",
+      "badge": "bestseller",
+      "description": "حذاء رياضي مريح بتصميم عصري، مناسب للاستخدام اليومي والرياضة الخفيفة. نعل مرن وتهوية ممتازة.",
+      "rating": 4.7,
+      "code": "KH-0001",
+      "visible": true
+    },
+    {
+      "id": "p2",
+      "name": "شحاط كاجوال بني",
+      "category": "شحاطات",
+      "icon": "sandal",
+      "image": "",
+      "price": 25000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "limited",
+      "badge": null,
+      "description": "شحاط جلد طبيعي بلون بني، خفيف ومريح، مثالي للصيف والاستخدام المنزلي والخارجي.",
+      "rating": 4.4,
+      "code": "KH-0002",
+      "visible": true
+    },
+    {
       "id": "p3",
       "name": "حذاء كلاسيك جلد أسود",
       "category": "كلاسيك",
@@ -30,6 +77,30 @@
       "description": "حذاء كلاسيك جلد طبيعي فاخر، مناسب للمناسبات الرسمية والعمل. خياطة متينة وتفصيل أنيق.",
       "rating": 4.9,
       "code": "KH-0003",
+      "visible": true
+    },
+    {
+      "id": "p4",
+      "name": "حذاء رياضي أبيض",
+      "category": "رياضي",
+      "icon": "sneaker",
+      "image": "",
+      "price": 50000,
+      "oldPrice": null,
+      "discount": 0,
+      "sizes": [
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "status": "available",
+      "badge": "new",
+      "description": "تصميم سنيكرز أبيض نظيف يناسب جميع الملابس، خامة قابلة للتنفس وراحة طوال اليوم.",
+      "rating": 4.6,
+      "code": "KH-0004",
       "visible": true
     },
     {
@@ -170,7 +241,7 @@
       "description": "شحاط طبي بنعل مرن داعم للقدم يقلل الضغط عن الكعب والمفاصل، مناسب لمن يقضي وقتاً طويلاً واقفاً.",
       "rating": 4.7,
       "code": "KH-0010",
-      "visible": false
+      "visible": true
     },
     {
       "id": "p11",
@@ -217,36 +288,6 @@
       "rating": 4.4,
       "code": "KH-0012",
       "visible": true
-    },
-    {
-      "id": "p1781933799924",
-      "code": "KH-0013",
-      "name": "شحاطة جلد ايراني",
-      "category": "شحاطات",
-      "icon": "sneaker",
-      "image": "images/p1781933799924_1781933799924_0.jpg",
-      "images": [
-        "images/p1781933799924_1781933799924_0.jpg"
-      ],
-      "price": 10000,
-      "oldPrice": 12000,
-      "discount": 10,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "colors": [
-        "اسود"
-      ],
-      "status": "available",
-      "badge": null,
-      "visible": true,
-      "description": "شحاطة رجالي جلد",
-      "rating": 4.5
     }
   ],
   "contact": {
