@@ -74,6 +74,34 @@
       "visible": true,
       "description": "جلد إصبع",
       "rating": 4.5
+    },
+    {
+      "id": "p1781958422742",
+      "code": "KH-0015",
+      "name": "جلد اصبع طبي",
+      "category": "شحاطات",
+      "icon": "sneaker",
+      "image": "images/p1781958422742_1781958422742_0.jpg",
+      "images": [
+        "images/p1781958422742_1781958422742_0.jpg",
+        "images/p1781958422742_1781958424198_1.jpg"
+      ],
+      "price": 10000,
+      "oldPrice": 13000,
+      "discount": 0,
+      "sizes": [
+        43,
+        45
+      ],
+      "colors": [
+        "اسود",
+        "حليبي"
+      ],
+      "status": "limited",
+      "badge": "bestseller",
+      "visible": true,
+      "description": "جلد اصبع طبي درجة أولى نوعية ممتازة",
+      "rating": 4.5
     }
   ],
   "contact": {
