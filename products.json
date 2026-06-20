@@ -9,29 +9,6 @@
   ],
   "products": [
     {
-      "id": "p2",
-      "name": "شحاط كاجوال بني",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 25000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44
-      ],
-      "status": "limited",
-      "badge": null,
-      "description": "شحاط جلد طبيعي بلون بني، خفيف ومريح، مثالي للصيف والاستخدام المنزلي والخارجي.",
-      "rating": 4.4,
-      "code": "KH-0002",
-      "visible": true
-    },
-    {
       "id": "p3",
       "name": "حذاء كلاسيك جلد أسود",
       "category": "كلاسيك",
