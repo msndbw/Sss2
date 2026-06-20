@@ -33,30 +33,6 @@
       "visible": true
     },
     {
-      "id": "p4",
-      "name": "حذاء رياضي أبيض",
-      "category": "رياضي",
-      "icon": "sneaker",
-      "image": "",
-      "price": 50000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        39,
-        40,
-        41,
-        42,
-        43,
-        44
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "تصميم سنيكرز أبيض نظيف يناسب جميع الملابس، خامة قابلة للتنفس وراحة طوال اليوم.",
-      "rating": 4.6,
-      "code": "KH-0004",
-      "visible": true
-    },
-    {
       "id": "p5",
       "name": "شحاط رياضي",
       "category": "شحاطات",
