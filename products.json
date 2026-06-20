@@ -43,7 +43,7 @@
       ],
       "status": "available",
       "badge": null,
-      "visible": true,
+      "visible": false,
       "description": "جلد أنواع",
       "rating": 4.5
     },
