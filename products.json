@@ -9,28 +9,6 @@
   ],
   "products": [
     {
-      "id": "p8",
-      "name": "حذاء كلاسيك بني",
-      "category": "كلاسيك",
-      "icon": "classic",
-      "image": "",
-      "price": 58000,
-      "oldPrice": 68000,
-      "discount": 15,
-      "sizes": [
-        41,
-        42,
-        43,
-        44
-      ],
-      "status": "available",
-      "badge": "offer",
-      "description": "حذاء كلاسيك بني أنيق مناسب للعمل والمناسبات، جلد عالي الجودة وتصميم يدوم.",
-      "rating": 4.6,
-      "code": "KH-0008",
-      "visible": true
-    },
-    {
       "id": "p9",
       "name": "شحاط استيك أسود",
       "category": "شحاطات",
