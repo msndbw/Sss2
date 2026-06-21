@@ -9,29 +9,6 @@
   ],
   "products": [
     {
-      "id": "p5",
-      "name": "شحاط رياضي",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 20000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "out",
-      "badge": null,
-      "description": "شحاط رياضي بحزام قابل للتعديل، نعل مانع للانزلاق ومناسب للاستخدام الخارجي.",
-      "rating": 4.2,
-      "code": "KH-0005",
-      "visible": true
-    },
-    {
       "id": "p7",
       "name": "حذاء جري خفيف",
       "category": "رياضة جري",
