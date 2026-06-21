@@ -9,30 +9,6 @@
   ],
   "products": [
     {
-      "id": "p10",
-      "name": "شحاط طبي مرن",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 30000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "شحاط طبي بنعل مرن داعم للقدم يقلل الضغط عن الكعب والمفاصل، مناسب لمن يقضي وقتاً طويلاً واقفاً.",
-      "rating": 4.7,
-      "code": "KH-0010",
-      "visible": true
-    },
-    {
       "id": "p11",
       "name": "شبشب منزلي جديد",
       "category": "شحاطات",
