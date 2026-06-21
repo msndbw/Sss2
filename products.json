@@ -9,30 +9,6 @@
   ],
   "products": [
     {
-      "id": "p9",
-      "name": "شحاط استيك أسود",
-      "category": "شحاطات",
-      "icon": "sandal",
-      "image": "",
-      "price": 15000,
-      "oldPrice": null,
-      "discount": 0,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "status": "available",
-      "badge": "new",
-      "description": "شحاط استيك مطاطي خفيف الوزن، مقاوم للماء وسهل التنظيف، خيار عملي للاستخدام اليومي والمسبح.",
-      "rating": 4.3,
-      "code": "KH-0009",
-      "visible": true
-    },
-    {
       "id": "p10",
       "name": "شحاط طبي مرن",
       "category": "شحاطات",
