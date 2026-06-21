@@ -35,6 +35,37 @@
       "visible": true,
       "description": "جلد",
       "rating": 4.5
+    },
+    {
+      "id": "p1782050635615",
+      "code": "KH-0014",
+      "name": "شحاطة مطراش",
+      "category": "شحاطات",
+      "icon": "sneaker",
+      "image": "images/p1782050635615_1782050635615_0.jpg",
+      "images": [
+        "images/p1782050635615_1782050635615_0.jpg"
+      ],
+      "price": 6000,
+      "oldPrice": 8000,
+      "discount": 0,
+      "sizes": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        "عسلي",
+        "اسود"
+      ],
+      "status": "available",
+      "badge": "offer",
+      "visible": true,
+      "description": "مطراش رحالي نوعية جيدة بالونين سارع بااحجز",
+      "rating": 4.5
     }
   ],
   "contact": {
