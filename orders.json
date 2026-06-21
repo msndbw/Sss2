@@ -1,41 +1,6 @@
 {
   "orders": [
     {
-      "id": "ORD-1781987674744",
-      "date": "2026-06-20T20:34:34.744Z",
-      "customer": {
-        "name": "مهدي",
-        "phone": "07802108299",
-        "province": "كركوك",
-        "district": "داقوق",
-        "landmark": "",
-        "notes": ""
-      },
-      "items": [
-        {
-          "name": "جلد رجالي",
-          "code": "KH-0013",
-          "image": "images/p1781986591202_1781986591202_0.jpg",
-          "price": 5000,
-          "qty": 1,
-          "size": "43",
-          "color": "",
-          "pieces": [
-            {
-              "size": "43",
-              "color": ""
-            }
-          ],
-          "total": 5000
-        }
-      ],
-      "subtotal": 5000,
-      "deliveryFee": 5000,
-      "total": 10000,
-      "status": "done",
-      "receivedAt": "2026-06-20T20:34:51.705Z"
-    },
-    {
       "id": "ORD-1781987530219",
       "date": "2026-06-20T20:32:10.219Z",
       "customer": {
