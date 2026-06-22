@@ -135,8 +135,10 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab==="listPanel") loadProductsList();
     if (btn.dataset.tab==="ordersPanel") loadOrdersList();
+    if (btn.dataset.tab==="customersPanel") loadCustomersList();
     if (btn.dataset.tab==="catsPanel") renderAdminCategories();
     if (btn.dataset.tab==="contactPanel") loadContactInfo();
+    if (btn.dataset.tab==="dbPanel") checkOrdersDbStatus();
   });
 });
 
@@ -322,6 +324,8 @@ function populateCategorySelect(){
 /* ====================================================
    معلومات التواصل
    ==================================================== */
+let customContactLinks = [];
+
 async function loadContactInfo(){
   const wrap = document.getElementById("contactPanel");
   try{
@@ -329,14 +333,48 @@ async function loadContactInfo(){
     const data = JSON.parse(file.content||'{}');
     const c = data.contact || {};
     document.getElementById("ctWhatsapp").value = c.whatsapp || "";
+    document.getElementById("ctMessenger").value = c.messenger || "";
     document.getElementById("ctPhone").value = c.phone || "";
     document.getElementById("ctFacebook").value = c.facebook || "";
     document.getElementById("ctInstagram").value = c.instagram || "";
     document.getElementById("ctTiktok").value = c.tiktok || "";
     document.getElementById("ctTelegram").value = c.telegram || "";
+    customContactLinks = Array.isArray(c.links) ? c.links : [];
+    renderCustomLinks();
   }catch(err){
     showAlert("globalError","تعذّر تحميل معلومات التواصل: "+err.message);
   }
+}
+
+function renderCustomLinks(){
+  const wrap = document.getElementById("customLinksList");
+  if (!wrap) return;
+  if (!customContactLinks.length){
+    wrap.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);">لا توجد روابط إضافية بعد.</p>`;
+    return;
+  }
+  wrap.innerHTML = customContactLinks.map((l,i)=>`
+    <div class="custom-link-row">
+      <span>${l.label}</span>
+      <a href="${l.href}" target="_blank" style="font-size:11px;color:var(--ink-soft);">${l.href}</a>
+      <button type="button" class="btn btn-outline btn-sm" onclick="removeCustomLink(${i})">حذف</button>
+    </div>`).join("");
+}
+
+function addCustomLink(){
+  const labelEl = document.getElementById("newLinkLabel");
+  const hrefEl = document.getElementById("newLinkHref");
+  const label = labelEl.value.trim();
+  const href = hrefEl.value.trim();
+  if (!label || !href){ alert("الرجاء تعبئة اسم المنصة والرابط"); return; }
+  customContactLinks.push({ label, href });
+  labelEl.value = ""; hrefEl.value = "";
+  renderCustomLinks();
+}
+
+function removeCustomLink(i){
+  customContactLinks.splice(i,1);
+  renderCustomLinks();
 }
 
 async function saveContactInfo(){
@@ -349,11 +387,13 @@ async function saveContactInfo(){
     const data = JSON.parse(file.content||'{"categories":[],"products":[]}');
     data.contact = {
       whatsapp: document.getElementById("ctWhatsapp").value.trim(),
+      messenger: document.getElementById("ctMessenger").value.trim(),
       phone: document.getElementById("ctPhone").value.trim(),
       facebook: document.getElementById("ctFacebook").value.trim(),
       instagram: document.getElementById("ctInstagram").value.trim(),
       tiktok: document.getElementById("ctTiktok").value.trim(),
-      telegram: document.getElementById("ctTelegram").value.trim()
+      telegram: document.getElementById("ctTelegram").value.trim(),
+      links: customContactLinks
     };
     await GitHubAPI.putTextFile(cfg, "products.json", JSON.stringify(data,null,2), "تحديث معلومات التواصل", file.sha);
     showAlert("globalSuccess","تم حفظ معلومات التواصل ✓");
@@ -685,99 +725,97 @@ async function deleteProduct(id){
   }
 }
 
+
 /* ====================================================
-   الطلبات
-   تُستلم بيانات الطلب كـ "كود طلب" ينسخه الزبون من شاشة الفاتورة
-   بالموقع، ثم يُلصق هنا ويُحفظ في orders.json بنفس الريبو
+   إدارة الطلبات — النسخة الجديدة (GitHub Issues API)
+   ----------------------------------------------------
+   لا حاجة لأي نسخ/لصق يدوي بعد الآن. الطلبات تصل وتُحفظ
+   تلقائياً من الموقع العام، وهذه اللوحة فقط تعرضها وتديرها.
    ==================================================== */
-const ORDER_CODE_PREFIX = "KHATWA-ORDER:";
 let adminOrders = [];
+let currentOrdersFilter = "all";
 
-function decodeOrderCode(raw){
-  const text = (raw||"").trim();
-  if (!text.startsWith(ORDER_CODE_PREFIX)){
-    throw new Error("الكود غير صالح — تأكد أنه يبدأ بـ KHATWA-ORDER:");
-  }
-  const b64 = text.slice(ORDER_CODE_PREFIX.length).trim();
-  try{
-    const json = decodeURIComponent(escape(atob(b64)));
-    return JSON.parse(json);
-  }catch(err){
-    throw new Error("تعذّر قراءة بيانات الطلب — تأكد من نسخ الكود كاملاً دون نقص");
-  }
-}
-
-async function addOrderFromPaste(){
-  hideAlert("orderPasteError");
-  hideAlert("orderPasteSuccess");
-  const input = document.getElementById("orderPasteInput");
-  const btn = document.getElementById("addOrderBtn");
-  const raw = input.value;
-
-  let order;
-  try{
-    order = decodeOrderCode(raw);
-  }catch(err){
-    showAlert("orderPasteError", err.message);
-    return;
-  }
-
-  btn.disabled = true;
-  const originalLabel = btn.textContent;
-  btn.innerHTML = `<span class="spinner"></span> جارٍ الحفظ...`;
-
-  try{
-    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
-    const data = file.content ? JSON.parse(file.content) : { orders: [] };
-    if (!Array.isArray(data.orders)) data.orders = [];
-
-    // تفادي تكرار نفس الطلب إذا لُصق أكثر من مرة
-    if (data.orders.some(o=>o.id===order.id)){
-      showAlert("orderPasteError","هذا الطلب مضاف مسبقاً.");
-      return;
-    }
-
-    order.status = order.status || "new";
-    order.receivedAt = new Date().toISOString();
-    data.orders.unshift(order);
-
-    await GitHubAPI.putTextFile(cfg, "orders.json", JSON.stringify(data,null,2), `طلب جديد: ${order.id}`, file.sha);
-    showAlert("orderPasteSuccess","تمت إضافة الطلب بنجاح ✓");
-    input.value = "";
-    loadOrdersList();
-  }catch(err){
-    showAlert("orderPasteError","تعذّر حفظ الطلب: "+err.message);
-  }finally{
-    btn.disabled = false;
-    btn.textContent = originalLabel;
-  }
+function ordersDbReady(){
+  return typeof ORDERS_CONFIG !== "undefined" && ORDERS_CONFIG.repo && ORDERS_CONFIG.owner;
 }
 
 async function loadOrdersList(){
   const wrap = document.getElementById("ordersList");
+  const notice = document.getElementById("dbNotConfiguredNotice");
   if (!wrap) return;
+
+  if (!ordersDbReady()){
+    if (notice) notice.style.display = "block";
+    wrap.innerHTML = "";
+    return;
+  }
+  if (notice) notice.style.display = "none";
+
   wrap.innerHTML = `<div class="empty-state">جارِ التحميل...</div>`;
   try{
-    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
-    const data = file.content ? JSON.parse(file.content) : { orders: [] };
-    adminOrders = Array.isArray(data.orders) ? data.orders : [];
-    renderOrdersList(adminOrders);
+    adminOrders = await GitHubAPI.listOrderIssues(ORDERS_CONFIG, "all");
+    renderOrdersList(filterOrdersForDisplay());
+    renderAdminStats();
   }catch(err){
     wrap.innerHTML = `<div class="empty-state">تعذّر التحميل: ${err.message}</div>`;
   }
 }
 
+function filterOrdersForDisplay(){
+  const q = (document.getElementById("ordersSearchInput")?.value || "").trim().toLowerCase();
+  let list = [...adminOrders];
+
+  if (currentOrdersFilter !== "all"){
+    list = list.filter(o => (o._labels||[]).includes(currentOrdersFilter));
+  }
+  if (q){
+    list = list.filter(o =>
+      (o.invoiceNo||"").toLowerCase().includes(q) ||
+      (o.customer?.name||"").toLowerCase().includes(q) ||
+      (o.customer?.phone||"").includes(q)
+    );
+  }
+  return list;
+}
+
+document.getElementById("ordersSearchInput")?.addEventListener("input", ()=>{
+  renderOrdersList(filterOrdersForDisplay());
+});
+document.getElementById("ordersStatusFilter")?.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  document.querySelectorAll("#ordersStatusFilter .chip").forEach(c=>c.classList.remove("active"));
+  btn.classList.add("active");
+  currentOrdersFilter = btn.dataset.status;
+  renderOrdersList(filterOrdersForDisplay());
+});
+
+const ADMIN_STATUS_LABELS = {
+  "new-order": "🆕 جديد",
+  "confirmed": "📞 مؤكَّد",
+  "processing": "📦 قيد التجهيز",
+  "shipped": "🚚 بالطريق",
+  "done": "✅ مُسلَّم",
+  "cancelled": "❌ ملغي"
+};
+const STATUS_FLOW = ["new-order","confirmed","processing","shipped","done"];
+
+function currentOrderStatus(o){
+  return (o._labels||[]).find(l => l!=="order") || "new-order";
+}
+
 function renderOrdersList(orders){
   const wrap = document.getElementById("ordersList");
   if (!orders.length){
-    wrap.innerHTML = `<div class="empty-state">لا توجد طلبات محفوظة بعد.</div>`;
+    wrap.innerHTML = `<div class="empty-state">لا توجد طلبات مطابقة.</div>`;
     return;
   }
 
   wrap.innerHTML = orders.map(o=>{
     const c = o.customer || {};
     const dateStr = o.date ? new Date(o.date).toLocaleString("ar-IQ") : "";
-    const statusLabel = o.status === "done" ? "✅ تم التنفيذ" : "🆕 جديد";
+    const status = currentOrderStatus(o);
+    const statusLabel = ADMIN_STATUS_LABELS[status] || "🆕 جديد";
 
     const itemsHTML = (o.items||[]).map(it=>{
       const thumb = it.image ? `<img src="${it.image}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">` : `<div style="width:40px;height:40px;background:var(--mist);border-radius:6px;display:flex;align-items:center;justify-content:center;">👟</div>`;
@@ -800,19 +838,22 @@ function renderOrdersList(orders){
       </div>`;
     }).join("");
 
+    const nextStatusIdx = STATUS_FLOW.indexOf(status);
+    const nextStatus = nextStatusIdx>-1 && nextStatusIdx < STATUS_FLOW.length-1 ? STATUS_FLOW[nextStatusIdx+1] : null;
+
     return `
-    <div class="card" style="margin-bottom:14px;border:2px solid ${o.status==='done'?'var(--line)':'var(--ember)'};">
+    <div class="card order-card" style="margin-bottom:14px;border:2px solid ${status==='done'?'var(--line)':status==='cancelled'?'var(--line)':'var(--ember)'};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
         <div>
-          <div style="font-family:var(--font-display);font-weight:800;font-size:14px;">${o.id}</div>
+          <div style="font-family:var(--font-display);font-weight:800;font-size:14px;">${o.invoiceNo || o.id}</div>
           <div style="font-size:11px;color:var(--ink-soft);">${dateStr}</div>
         </div>
-        <span style="font-size:12px;font-weight:700;">${statusLabel}</span>
+        <span class="order-status-badge">${statusLabel}</span>
       </div>
 
       <div style="background:var(--mist);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.9;">
         <b>${c.name || "بدون اسم"}</b> — <a href="tel:${c.phone}">${c.phone||""}</a><br>
-        ${c.province||""} ${c.district?" / "+c.district:""}<br>
+        ${c.province||""} ${c.district?" / "+c.district:""} ${c.subdistrict?" / "+c.subdistrict:""}<br>
         ${c.landmark?`أقرب نقطة: ${c.landmark}<br>`:""}
         ${c.notes?`ملاحظات: ${c.notes}<br>`:""}
       </div>
@@ -830,37 +871,131 @@ function renderOrdersList(orders){
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="https://wa.me/${(c.phone||"").replace(/[^0-9]/g,"")}" target="_blank" class="btn btn-whatsapp btn-sm">تأكيد عبر واتساب</a>
-        ${o.status!=="done" ? `<button class="btn btn-outline btn-sm" onclick="markOrderDone('${o.id}')">✓ وضع كمُنفّذ</button>` : ""}
-        <button class="btn btn-outline btn-sm" onclick="deleteOrder('${o.id}')">🗑️ حذف</button>
+        <a href="https://wa.me/${(c.phone||"").replace(/[^0-9]/g,"")}" target="_blank" class="btn btn-whatsapp btn-sm">تواصل عبر واتساب</a>
+        ${nextStatus ? `<button class="btn btn-outline btn-sm" onclick="advanceOrderStatus(${o._issueNumber},'${nextStatus}')">➡️ ${ADMIN_STATUS_LABELS[nextStatus]}</button>` : ""}
+        ${status!=="cancelled" && status!=="done" ? `<button class="btn btn-outline btn-sm" onclick="setOrderStatus(${o._issueNumber},'cancelled')">❌ إلغاء</button>` : ""}
       </div>
     </div>`;
   }).join("");
 }
 
-async function markOrderDone(id){
+async function advanceOrderStatus(issueNumber, newStatus){
+  if (!ordersDbReady() || !ORDERS_CONFIG.writeToken){ alert("توكن الكتابة غير مُهيّأ — راجع تبويب قاعدة البيانات."); return; }
   try{
-    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
-    const data = JSON.parse(file.content);
-    const order = data.orders.find(o=>o.id===id);
-    if (order) order.status = "done";
-    await GitHubAPI.putTextFile(cfg,"orders.json",JSON.stringify(data,null,2),`تحديث حالة الطلب: ${id}`,file.sha);
+    await GitHubAPI.updateOrderStatus(ORDERS_CONFIG, issueNumber, newStatus, `تم تحديث حالة الطلب إلى: ${ADMIN_STATUS_LABELS[newStatus]}`);
     loadOrdersList();
   }catch(err){
-    alert("تعذّر تحديث الطلب: "+err.message);
+    alert("تعذّر تحديث حالة الطلب: "+err.message);
+  }
+}
+async function setOrderStatus(issueNumber, status){
+  if (status==="cancelled" && !confirm("هل تريد إلغاء هذا الطلب؟")) return;
+  await advanceOrderStatus(issueNumber, status);
+}
+
+function renderAdminStats(){
+  const el = document.getElementById("adminStats");
+  if (!el) return;
+  const totalProducts = adminProducts.length;
+  const newOrders = adminOrders.filter(o=>currentOrderStatus(o)==="new-order").length;
+  const doneOrders = adminOrders.filter(o=>currentOrderStatus(o)==="done").length;
+  const revenue = adminOrders.filter(o=>currentOrderStatus(o)==="done").reduce((s,o)=>s+(o.total||0),0);
+
+  el.innerHTML = `
+    <div class="admin-stat-card"><b>${totalProducts}</b><span>منتج</span></div>
+    <div class="admin-stat-card"><b>${newOrders}</b><span>طلب جديد</span></div>
+    <div class="admin-stat-card"><b>${doneOrders}</b><span>طلب مُسلَّم</span></div>
+    <div class="admin-stat-card"><b>${formatAdminPrice(revenue)}</b><span>إيرادات مُحقَّقة (د.ع)</span></div>`;
+}
+
+/* ====================================================
+   سجل الزبائن — يُبنى تلقائياً من الطلبات المحفوظة
+   ==================================================== */
+async function loadCustomersList(){
+  const wrap = document.getElementById("customersList");
+  if (!wrap) return;
+  if (!ordersDbReady()){
+    wrap.innerHTML = `<div class="empty-state">فعّل قاعدة بيانات الطلبات أولاً من تبويب "قاعدة البيانات".</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="empty-state">جارِ التحميل...</div>`;
+  try{
+    if (!adminOrders.length) adminOrders = await GitHubAPI.listOrderIssues(ORDERS_CONFIG, "all");
+    renderCustomersList(adminOrders);
+  }catch(err){
+    wrap.innerHTML = `<div class="empty-state">تعذّر التحميل: ${err.message}</div>`;
   }
 }
 
-async function deleteOrder(id){
-  if (!confirm("حذف هذا الطلب نهائياً؟")) return;
+document.getElementById("customersSearchInput")?.addEventListener("input", (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  const filtered = adminOrders.filter(o=>
+    (o.customer?.name||"").toLowerCase().includes(q) || (o.customer?.phone||"").includes(q)
+  );
+  renderCustomersList(q ? filtered : adminOrders);
+});
+
+function renderCustomersList(orders){
+  const wrap = document.getElementById("customersList");
+  const byPhone = {};
+  orders.forEach(o=>{
+    const phone = o.customer?.phone || "بدون رقم";
+    if (!byPhone[phone]) byPhone[phone] = { customer:o.customer, orders:[] };
+    byPhone[phone].orders.push(o);
+  });
+
+  const customers = Object.values(byPhone).sort((a,b)=>b.orders.length - a.orders.length);
+  if (!customers.length){
+    wrap.innerHTML = `<div class="empty-state">لا يوجد زبائن مسجّلين بعد.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = customers.map(cu=>{
+    const c = cu.customer || {};
+    const totalSpent = cu.orders.reduce((s,o)=>s+(o.total||0),0);
+    return `<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-weight:800;font-size:14px;">${c.name||"بدون اسم"}</div>
+          <div style="font-size:12px;color:var(--ink-soft);"><a href="tel:${c.phone}">${c.phone||""}</a></div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${c.province||""} ${c.district?" / "+c.district:""}</div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-family:var(--font-display);font-weight:800;color:var(--ember);">${cu.orders.length} طلب</div>
+          <div style="font-size:11px;color:var(--ink-soft);">${formatAdminPrice(totalSpent)} د.ع إجمالي</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ====================================================
+   حالة قاعدة بيانات الطلبات (تبويب الإعدادات)
+   ==================================================== */
+async function checkOrdersDbStatus(){
+  const box = document.getElementById("dbConfigStatus");
+  if (!box) return;
+  hideAlert("dbConfigError");
+
+  if (typeof ORDERS_CONFIG === "undefined"){
+    box.innerHTML = `<div class="db-status-row error">⚠️ ملف orders-config.js غير موجود بالموقع.</div>`;
+    return;
+  }
+  if (!ORDERS_CONFIG.owner || !ORDERS_CONFIG.repo){
+    box.innerHTML = `<div class="db-status-row error">⚠️ لم يتم تعبئة owner/repo في orders-config.js بعد.</div>`;
+    return;
+  }
+  if (!ORDERS_CONFIG.writeToken){
+    box.innerHTML = `<div class="db-status-row error">⚠️ ريبو الطلبات معرَّف (${ORDERS_CONFIG.owner}/${ORDERS_CONFIG.repo}) لكن لا يوجد توكن كتابة — الحفظ التلقائي للطلبات الجديدة متوقف حالياً.</div>`;
+    return;
+  }
+
+  box.innerHTML = `<div class="db-status-row loading"><span class="spinner"></span> جارٍ التحقق من الاتصال...</div>`;
   try{
-    const file = await GitHubAPI.getTextFile(cfg, "orders.json");
-    const data = JSON.parse(file.content);
-    data.orders = data.orders.filter(o=>o.id!==id);
-    await GitHubAPI.putTextFile(cfg,"orders.json",JSON.stringify(data,null,2),`حذف الطلب: ${id}`,file.sha);
-    loadOrdersList();
+    const orders = await GitHubAPI.listOrderIssues(ORDERS_CONFIG, "all");
+    box.innerHTML = `<div class="db-status-row ok">✅ متصل بنجاح بريبو <b>${ORDERS_CONFIG.owner}/${ORDERS_CONFIG.repo}</b> — يوجد حالياً ${orders.length} طلب محفوظ.</div>`;
   }catch(err){
-    alert("تعذّر حذف الطلب: "+err.message);
+    box.innerHTML = `<div class="db-status-row error">❌ تعذّر الاتصال: ${err.message}</div>`;
   }
 }
 

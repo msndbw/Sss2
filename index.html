@@ -6,6 +6,11 @@
 <title>خطوة | متجر أحذية وشحاطات رجالية</title>
 <meta name="description" content="متجر خطوة لبيع الأحذية والشحاطات الرجالية — تشكيلات رياضية وكلاسيكية وكاجوال بأفضل الأسعار، مع إمكانية الطلب المباشر عبر واتساب.">
 <meta name="theme-color" content="#16181b">
+<link rel="icon" type="image/png" href="images/logo.png">
+<meta property="og:title" content="خطوة | متجر أحذية وشحاطات رجالية">
+<meta property="og:description" content="أحذية وشحاطات رجالية أصلية بجودة عالية وأسعار منافسة — اطلب مباشرة عبر واتساب.">
+<meta property="og:image" content="images/logo.png">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Tajawal:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -26,11 +31,12 @@
 <!-- الهيدر -->
 <header class="site-header" id="siteHeader">
   <div class="container header-inner">
-    <div class="logo" id="siteLogo">خطوة<span>.</span></div>
+    <div class="logo" id="siteLogo"><img src="images/logo.png" alt="خطوة" class="logo-img"></div>
 
     <nav class="main-nav" id="mainNav">
       <a href="#home" class="active">الرئيسية</a>
       <a href="#products">المنتجات</a>
+      <a href="#" id="trackOrderLink">تتبّع طلبي 🧾</a>
       <a href="#" data-wa-general>تواصل معنا</a>
     </nav>
 
@@ -122,7 +128,7 @@
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-logo">خطوة<span>.</span></div>
+        <div class="footer-logo"><img src="images/logo.png" alt="خطوة" class="footer-logo-img"></div>
         <p class="footer-about">متجر متخصص ببيع الأحذية والشحاطات الرجالية الأصلية، نوفّر تشكيلات متنوعة بجودة عالية وأسعار منافسة، مع طلب مباشر وسهل عبر واتساب.</p>
       </div>
       <div class="footer-col">
@@ -158,7 +164,7 @@
 
 <!-- أزرار التواصل العائمة -->
 <div class="float-contact-stack">
-  <a href="https://m.me/61590750916432" target="_blank" rel="noopener" class="float-messenger" aria-label="تواصل عبر ماسنجر">
+  <a href="https://m.me/61590750916432" target="_blank" rel="noopener" class="float-messenger" id="floatMessengerLink" aria-label="تواصل عبر ماسنجر">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.27c0 2.91 1.44 5.51 3.7 7.21V22l3.38-1.86c.9.25 1.86.38 2.92.38 5.52 0 10-4.15 10-9.27S17.52 2 12 2Zm1.04 12.48-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82Z"/></svg>
   </a>
   <a href="#" class="float-whatsapp" data-wa-general aria-label="تواصل عبر واتساب">
@@ -230,6 +236,26 @@
   </div>
 </div>
 
+<!-- ===== نافذة تتبّع الطلب برقم الفاتورة ===== -->
+<div class="track-overlay" id="trackOverlay">
+  <div class="track-modal" id="trackModal">
+    <div class="order-modal-head">
+      <h3>🧾 تتبّع طلبي</h3>
+      <button class="cart-close" id="trackClose" aria-label="إغلاق">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="track-body">
+      <p class="track-hint">أدخل رقم الفاتورة الذي وصلك بعد إتمام الطلب (مثال: KH-260621-0001) لمعرفة حالة طلبك وتفاصيله.</p>
+      <div class="track-search-row">
+        <input type="text" id="trackInvoiceInput" placeholder="KH-260621-0001" autocomplete="off">
+        <button class="btn btn-primary btn-sm" id="trackSearchBtn" onclick="searchOrderByInvoice()">بحث</button>
+      </div>
+      <div id="trackResult"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== صندوق عرض الصورة بالحجم الكامل (Lightbox) ===== -->
 <div class="lightbox-overlay" id="lightboxOverlay">
   <div class="lightbox-stage" id="lightboxStage">
@@ -259,6 +285,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="github-api.js"></script>
+<script src="orders-config.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

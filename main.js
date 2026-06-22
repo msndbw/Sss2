@@ -4,7 +4,7 @@
    ==================================================== */
 
 const WHATSAPP_NUMBER = "9647857392727";
-const MESSENGER_LINK = "https://m.me/61590750916432";
+const MESSENGER_LINK_DEFAULT = "https://m.me/61590750916432";
 const DATA_URL = "products.json";
 
 /* أجور التوصيل: 1000 د.ع لقضاء البدير في محافظة القادسية، و5000 د.ع لبقية مناطق العراق */
@@ -22,15 +22,34 @@ function calcDeliveryFee(province, district){
 
 let PRODUCTS = [];
 let CATEGORIES = ["الكل"];
-let CONTACT = { whatsapp: WHATSAPP_NUMBER, phone:"", facebook:"", instagram:"", tiktok:"", telegram:"" };
+let CONTACT = { whatsapp: WHATSAPP_NUMBER, phone:"", messenger:"", facebook:"", instagram:"", tiktok:"", telegram:"", links: [] };
 let currentGalleryIdx = 0;
 let currentProductId = null;
 let selectedSize = null;
 let selectedColor = null;
 let selectedQty = 1;
 let LAST_ORDER_FIELDS = null; /* نسخة محفوظة من بيانات العميل تبقى متاحة حتى بعد تحويل نافذة الطلب إلى عرض الفاتورة */
+let CURRENT_INVOICE_NO = null; /* رقم الفاتورة الحالي المرتبط بآخر طلب تم بناؤه */
+let ORDER_ALREADY_SAVED = false; /* يمنع حفظ نفس الطلب أكثر من مرة بقاعدة البيانات لو ضغط الزبون الإرسال مرتين */
+
+/* ================================================
+   رقم الفاتورة الفريد
+   صيغة: KH-YYMMDD-XXXX (XXXX = عدّاد تسلسلي يومي مخزّن محلياً
+   لضمان عدم التكرار حتى لو فُتح الموقع أكثر من مرة بنفس اليوم)
+   ================================================ */
+function generateInvoiceNo(){
+  const now = new Date();
+  const ymd = now.getFullYear().toString().slice(-2) +
+    String(now.getMonth()+1).padStart(2,"0") +
+    String(now.getDate()).padStart(2,"0");
+  const counterKey = "khatwa_invoice_counter_" + ymd;
+  let n = parseInt(localStorage.getItem(counterKey) || "0", 10) + 1;
+  localStorage.setItem(counterKey, String(n));
+  return `KH-${ymd}-${String(n).padStart(4,"0")}`;
+}
 
 function waNumber(){ return CONTACT.whatsapp || WHATSAPP_NUMBER; }
+function messengerLink(){ return CONTACT.messenger || MESSENGER_LINK_DEFAULT; }
 
 /* ---------- رسوم تعبيرية للأحذية ---------- */
 const SHOE_ICONS = {
@@ -809,6 +828,8 @@ function openOrderModal(){
   if (!cart.length){ openCart(); return; }
   closeCart();
   LAST_ORDER_FIELDS = null;
+  CURRENT_INVOICE_NO = null; /* طلب جديد = رقم فاتورة جديد */
+  ORDER_ALREADY_SAVED = false;
 
   const orderOverlay = document.getElementById("orderOverlay");
   const orderContent = document.getElementById("orderContent");
@@ -896,6 +917,10 @@ function openOrderModal(){
           </div>
         </div>
         <div class="order-field">
+          <label>الناحية (اختياري)</label>
+          <input type="text" id="ordSubdistrict" placeholder="اسم الناحية إن وُجدت">
+        </div>
+        <div class="order-field">
           <label>أقرب نقطة دالة</label>
           <input type="text" id="ordLandmark" placeholder="مثال: قرب جامع، مدرسة، محطة وقود...">
         </div>
@@ -923,9 +948,9 @@ function openOrderModal(){
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
         إرسال الطلب عبر واتساب
       </button>
-      <button class="btn btn-outline" onclick="showInvoice()">
+      <button class="btn btn-outline" onclick="previewInvoice()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        عرض الفاتورة
+        معاينة الفاتورة
       </button>
     </div>`;
 
@@ -999,6 +1024,12 @@ function updateOrderTotals(){
   if (grandEl) grandEl.textContent = formatPrice(subtotal + fee);
 }
 
+/* تحقق بسيط من صيغة رقم الهاتف العراقي (07 + 9 أرقام = 11 رقم بالمجموع) */
+function isValidIraqiPhone(phone){
+  const digits = String(phone||"").replace(/[^0-9]/g,"");
+  return /^07[3-9][0-9]{8}$/.test(digits);
+}
+
 /* قراءة بيانات العميل من النموذج وحفظها — يتم استدعاؤها قبل تحويل النافذة لعرض الفاتورة
    حتى لا تُفقد القيم بعد إزالة الحقول من الصفحة (DOM) */
 function readOrderFields(){
@@ -1006,6 +1037,7 @@ function readOrderFields(){
   const phoneEl = document.getElementById("ordPhone");
   const provinceEl = document.getElementById("ordProvince");
   const districtEl = document.getElementById("ordDistrict");
+  const subdistrictEl = document.getElementById("ordSubdistrict");
   const landmarkEl = document.getElementById("ordLandmark");
   const notesEl = document.getElementById("ordNotes");
 
@@ -1016,24 +1048,75 @@ function readOrderFields(){
       phone: phoneEl?.value.trim()||"",
       province: provinceEl?.value||"",
       district: districtEl?.value||"",
+      subdistrict: subdistrictEl?.value.trim()||"",
       landmark: landmarkEl?.value.trim()||"",
       notes: notesEl?.value.trim()||""
     };
   }
 
   // نعيد النسخة المحفوظة (سواء كانت حديثة أو من قبل، مثل حالة عرض الفاتورة بعد حذف النموذج)
-  return LAST_ORDER_FIELDS || { name:"", phone:"", province:"", district:"", landmark:"", notes:"" };
+  return LAST_ORDER_FIELDS || { name:"", phone:"", province:"", district:"", subdistrict:"", landmark:"", notes:"" };
 }
 
-/* إرسال الطلب مع محاولة إرفاق الفاتورة تلقائياً (يبني الفاتورة أولاً ثم يحاول مشاركتها كصورة) */
-async function sendOrderWithInvoice(){
+/* ================================================
+   إرسال الطلب — النسخة المُصلَحة
+   ----------------------------------------------------
+   المشكلة القديمة: كان الموقع يبني صورة الفاتورة أولاً
+   (عملية غير متزامنة تستغرق وقت) ثم يحاول يفتح واتساب
+   بعدها — وهذا يخلي المتصفح (خصوصاً بالموبايل) يحجب
+   فتح النافذة لأنها ما عادت ناتجة "مباشرة" عن ضغطة
+   المستخدم. الحل: نفتح نافذة واتساب/ماسنجر فوراً ضمن
+   نفس اللحظة التي يضغط فيها الزبون الزر (بدون أي await
+   قبلها)، ثم نكمل حفظ الطلب بقاعدة البيانات بالخلفية.
+   ================================================ */
+/* معاينة الفاتورة فقط (بدون إرسال ولا حفظ بقاعدة البيانات) — تتيح للزبون مراجعة طلبه قبل التأكيد */
+function previewInvoice(){
   const fields = readOrderFields();
-  if (!fields.phone){ alert("الرجاء إدخال رقم الهاتف"); return; }
+  if (!fields.phone || !isValidIraqiPhone(fields.phone)){
+    alert("الرجاء إدخال رقم هاتف عراقي صحيح (مثال: 07xxxxxxxxx)");
+    return;
+  }
   if (!fields.province){ alert("الرجاء اختيار المحافظة"); return; }
   if (!fields.district){ alert("الرجاء اختيار القضاء"); return; }
   showInvoice();
-  if (SEND_METHOD === "messenger") sendOrderMessenger();
-  else await shareInvoiceToWhatsapp();
+  // بمعاينة الفاتورة فقط، لا نعرض شريط "تم الحفظ" لأن الطلب لم يُرسل بعد فعلياً
+  const statusEl = document.getElementById("orderSaveStatus");
+  if (statusEl) statusEl.innerHTML = `<span style="color:var(--ink-soft);">📝 هذه معاينة فقط — اضغط "إرسال الطلب" لتأكيده وحفظه.</span>`;
+}
+
+async function sendOrderWithInvoice(){
+  const fields = readOrderFields();
+  if (!fields.phone || !isValidIraqiPhone(fields.phone)){
+    alert("الرجاء إدخال رقم هاتف عراقي صحيح (مثال: 07xxxxxxxxx)");
+    return;
+  }
+  if (!fields.province){ alert("الرجاء اختيار المحافظة"); return; }
+  if (!fields.district){ alert("الرجاء اختيار القضاء"); return; }
+
+  // رقم فاتورة جديد يُولَّد لحظة الإرسال فقط (وليس عند مجرد فتح نافذة الطلب)
+  if (!CURRENT_INVOICE_NO) CURRENT_INVOICE_NO = generateInvoiceNo();
+
+  const text = buildOrderText();
+  if (!text) return;
+
+  // الخطوة الحرجة: نفتح نافذة التواصل فوراً ومتزامنة مع الضغطة،
+  // قبل أي عملية async، حتى لا يحجبها المتصفح
+  if (SEND_METHOD === "messenger"){
+    window.open(`${messengerLink()}?text=${encodeURIComponent(text)}`, "_blank");
+  } else {
+    window.open(`https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`, "_blank");
+  }
+
+  // نعرض للزبون شاشة الفاتورة + رقم الفاتورة فوراً
+  showInvoice();
+
+  // نحفظ الطلب بقاعدة البيانات بالخلفية مرة واحدة فقط (لا تمنع ولا تؤخر فتح واتساب أعلاه)
+  if (!ORDER_ALREADY_SAVED){
+    ORDER_ALREADY_SAVED = true;
+    saveOrderToDatabase().catch(()=>{ /* الخطأ يُعرض من داخل الدالة نفسها */ });
+  } else {
+    setOrderSaveStatus("saved", CURRENT_INVOICE_NO);
+  }
 }
 
 function closeOrderModal(){
@@ -1043,7 +1126,7 @@ function closeOrderModal(){
 
 function buildOrderText(){
   const cart = getCart();
-  const { name, phone, province, district, landmark, notes } = readOrderFields();
+  const { name, phone, province, district, subdistrict, landmark, notes } = readOrderFields();
 
   if (!phone){ alert("الرجاء إدخال رقم الهاتف"); return null; }
   if (!province){ alert("الرجاء اختيار المحافظة"); return null; }
@@ -1051,12 +1134,14 @@ function buildOrderText(){
 
   let subtotal = 0;
   let msg = `🌹 *طلب جديد من متجر خطوة*\n`;
+  if (CURRENT_INVOICE_NO) msg += `🧾 رقم الفاتورة: *${CURRENT_INVOICE_NO}*\n`;
   msg += `━━━━━━━━━━━━━━━━━\n`;
   msg += `👤 *بيانات العميل*\n`;
   if (name) msg += `الاسم: ${name}\n`;
   msg += `الهاتف: ${phone}\n`;
   msg += `المحافظة: ${province}\n`;
   msg += `القضاء: ${district}\n`;
+  if (subdistrict) msg += `الناحية: ${subdistrict}\n`;
   if (landmark) msg += `أقرب نقطة: ${landmark}\n`;
   msg += `\n📦 *تفاصيل الطلب*\n`;
 
@@ -1098,26 +1183,26 @@ function buildOrderText(){
 function sendOrderWhatsapp(){
   const text = buildOrderText();
   if (!text) return;
-  window.open(`https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`);
+  window.open(`https://wa.me/${waNumber()}?text=${encodeURIComponent(text)}`, "_blank");
 }
 
 function sendOrderMessenger(){
   const text = buildOrderText();
   if (!text) return;
-  window.open(`${MESSENGER_LINK}?text=${encodeURIComponent(text)}`, "_blank");
+  window.open(`${messengerLink()}?text=${encodeURIComponent(text)}`, "_blank");
 }
 
 /* ================================================
-   نقل الطلب إلى لوحة التحكم
-   نظراً لأن الموقع العام لا يحتوي على توكن GitHub (لأسباب أمنية)، لا يمكنه
-   حفظ الطلب مباشرة بالريبو. بدلاً من ذلك نبني "كود طلب" نصياً يحتوي كل
-   بيانات الطلب، يقوم الزبون أو صاحب المتجر بنسخه ولصقه داخل لوحة التحكم
-   التي تقرأه وتحفظه بالريبو باستخدام التوكن الموجود هناك فقط. */
-const ORDER_CODE_PREFIX = "KHATWA-ORDER:";
-
+   حفظ الطلب تلقائياً بقاعدة البيانات (GitHub Issues)
+   ----------------------------------------------------
+   لا حاجة بعد الآن لأي نسخ/لصق يدوي. بمجرد إرسال الطلب
+   يُحفظ تلقائياً بريبو الطلبات المنفصل (orders-config.js)
+   ويصبح فوراً قابلاً للبحث برقم الفاتورة من الموقع نفسه
+   أو من لوحة التحكم.
+   ================================================ */
 function buildOrderRecord(){
   const cart = getCart();
-  const { name, phone, province, district, landmark, notes } = readOrderFields();
+  const { name, phone, province, district, subdistrict, landmark, notes } = readOrderFields();
   if (!phone || !province || !district) return null;
 
   let subtotal = 0;
@@ -1143,8 +1228,11 @@ function buildOrderRecord(){
 
   return {
     id: "ORD-" + Date.now(),
+    invoiceNo: CURRENT_INVOICE_NO || generateInvoiceNo(),
     date: new Date().toISOString(),
-    customer: { name, phone, province, district, landmark, notes },
+    status: "new",
+    sendMethod: SEND_METHOD,
+    customer: { name, phone, province, district, subdistrict, landmark, notes },
     items,
     subtotal,
     deliveryFee,
@@ -1152,30 +1240,153 @@ function buildOrderRecord(){
   };
 }
 
-/* ينسخ كود الطلب إلى الحافظة حتى يُلصق داخل لوحة التحكم لاحقاً */
-async function copyOrderForAdmin(){
-  const record = buildOrderRecord();
-  if (!record){ alert("تعذّر نسخ بيانات الطلب — تأكد من تعبئة الهاتف والمحافظة والقضاء."); return; }
+/* حالة شريط حفظ الطلب التي تظهر للزبون أسفل الفاتورة */
+function setOrderSaveStatus(state, extra){
+  const el = document.getElementById("orderSaveStatus");
+  if (!el) return;
+  if (state === "saving"){
+    el.className = "order-save-status saving";
+    el.innerHTML = `<span class="spinner"></span> جارٍ حفظ طلبك بقاعدة البيانات...`;
+  } else if (state === "saved"){
+    el.className = "order-save-status saved";
+    el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg> تم حفظ طلبك بنجاح — رقم الفاتورة: <b>${extra||""}</b>`;
+  } else if (state === "error"){
+    el.className = "order-save-status error";
+    el.innerHTML = `⚠️ تم إرسال طلبك عبر الرسالة بنجاح، لكن تعذّر حفظه تلقائياً بقاعدة البيانات (${extra||"خطأ غير معروف"}). احتفظ برقم الفاتورة <b>${CURRENT_INVOICE_NO||""}</b> لمتابعة طلبك.`;
+  } else {
+    el.className = "order-save-status";
+    el.innerHTML = "";
+  }
+}
 
-  const code = ORDER_CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(record))));
-  const btn = document.getElementById("copyOrderBtn");
+async function saveOrderToDatabase(){
+  const record = buildOrderRecord();
+  if (!record){ setOrderSaveStatus("error","بيانات ناقصة"); return; }
+
+  if (typeof ORDERS_CONFIG === "undefined" || !ORDERS_CONFIG.writeToken){
+    // لم تُهيّأ قاعدة البيانات بعد من قبل صاحب المتجر — لا نوقف الطلب، فقط ننبّه بهدوء
+    setOrderSaveStatus("error","لم يتم تفعيل الحفظ التلقائي بعد");
+    return;
+  }
+
+  setOrderSaveStatus("saving");
+  try{
+    await GitHubAPI.createOrderIssue(ORDERS_CONFIG, record);
+    setOrderSaveStatus("saved", record.invoiceNo);
+  }catch(err){
+    setOrderSaveStatus("error", err.message);
+  }
+}
+
+/* ================================================
+   تتبّع الطلب برقم الفاتورة (متاح لكل زائر من الموقع)
+   ================================================ */
+function openTrackModal(){
+  document.getElementById("trackOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+  document.getElementById("trackResult").innerHTML = "";
+  document.getElementById("trackInvoiceInput").value = "";
+  setTimeout(()=>document.getElementById("trackInvoiceInput")?.focus(), 100);
+}
+function closeTrackModal(){
+  document.getElementById("trackOverlay")?.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+const ORDER_STATUS_LABELS = {
+  "new-order": "🆕 طلب جديد",
+  "new": "🆕 طلب جديد",
+  "confirmed": "📞 تم التأكيد",
+  "processing": "📦 قيد التجهيز",
+  "shipped": "🚚 في الطريق للتوصيل",
+  "done": "✅ تم التسليم",
+  "cancelled": "❌ ملغي"
+};
+
+async function searchOrderByInvoice(){
+  const input = document.getElementById("trackInvoiceInput");
+  const resultEl = document.getElementById("trackResult");
+  const invoiceNo = input.value.trim().toUpperCase();
+
+  if (!invoiceNo){ resultEl.innerHTML = `<div class="track-msg error">الرجاء إدخال رقم الفاتورة</div>`; return; }
+
+  if (typeof ORDERS_CONFIG === "undefined" || !ORDERS_CONFIG.repo){
+    resultEl.innerHTML = `<div class="track-msg error">نظام تتبّع الطلبات غير مفعّل حالياً، تواصل معنا مباشرة عبر واتساب.</div>`;
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="track-msg loading"><span class="spinner"></span> جارٍ البحث...</div>`;
 
   try{
-    await navigator.clipboard.writeText(code);
-    if (btn){
-      const original = btn.innerHTML;
-      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> تم النسخ`;
-      setTimeout(()=>{ btn.innerHTML = original; }, 2200);
+    const order = await GitHubAPI.findOrderByInvoice(ORDERS_CONFIG, invoiceNo);
+    if (!order){
+      resultEl.innerHTML = `<div class="track-msg error">لم يتم العثور على طلب بهذا الرقم. تأكد من كتابته بشكل صحيح.</div>`;
+      return;
     }
+    renderTrackResult(order);
   }catch(err){
-    // بديل في حال تعذّر الوصول لواجهة الحافظة (مثلاً متصفحات قديمة)
-    prompt("انسخ الكود التالي يدوياً والصقه في لوحة التحكم:", code);
+    resultEl.innerHTML = `<div class="track-msg error">تعذّر البحث حالياً: ${err.message}</div>`;
   }
+}
+
+function renderTrackResult(order){
+  const resultEl = document.getElementById("trackResult");
+  const c = order.customer || {};
+  const statusLabel = ORDER_STATUS_LABELS[order._labels?.find(l=>l!=="order")] || ORDER_STATUS_LABELS[order.status] || "🆕 طلب جديد";
+  const dateStr = order.date ? new Date(order.date).toLocaleDateString("ar-IQ") : "";
+
+  const itemsHTML = (order.items||[]).map(it=>{
+    const thumb = it.image ? `<img src="${it.image}" alt="">` : getShoeIcon({icon:"sneaker"});
+    let variant = "";
+    if (it.pieces?.length > 1){
+      variant = it.pieces.map((pc,i)=>`ق${i+1}: ${pc.size||""}${pc.color?" / "+pc.color:""}`).join(" | ");
+    } else {
+      const parts = [];
+      if (it.size) parts.push(`مقاس ${it.size}`);
+      if (it.color) parts.push(it.color);
+      variant = parts.join(" / ");
+    }
+    return `<div class="track-item">
+      <div class="track-item-thumb">${thumb}</div>
+      <div class="track-item-body">
+        <div class="track-item-name">${it.name}</div>
+        <div class="track-item-meta">${variant} — الكمية: ${it.qty}</div>
+      </div>
+      <div class="track-item-price">${formatPrice(it.total)}</div>
+    </div>`;
+  }).join("");
+
+  resultEl.innerHTML = `
+    <div class="track-result-card">
+      <div class="track-result-head">
+        <span class="track-invoice-no">${order.invoiceNo}</span>
+        <span class="track-status-badge">${statusLabel}</span>
+      </div>
+      <div class="track-result-date">تاريخ الطلب: ${dateStr}</div>
+      <div class="track-result-section">
+        <h4>بيانات التوصيل</h4>
+        <p>
+          ${c.name?`الاسم: ${c.name}<br>`:""}
+          الهاتف: ${c.phone||""}<br>
+          ${c.province?`المحافظة: ${c.province}${c.district?" - "+c.district:""}${c.subdistrict?" - "+c.subdistrict:""}<br>`:""}
+          ${c.landmark?`أقرب نقطة: ${c.landmark}<br>`:""}
+        </p>
+      </div>
+      <div class="track-result-section">
+        <h4>المنتجات</h4>
+        ${itemsHTML}
+      </div>
+      <div class="track-result-totals">
+        <div><span>المجموع الفرعي</span><span>${formatPrice(order.subtotal)}</span></div>
+        <div><span>أجور التوصيل</span><span>${formatPrice(order.deliveryFee)}</span></div>
+        <div class="track-grand"><span>المجموع الكلي</span><span>${formatPrice(order.total)}</span></div>
+      </div>
+    </div>`;
 }
 
 function showInvoice(){
   const cart = getCart();
-  const { name, phone, province, district, landmark } = readOrderFields();
+  const { name, phone, province, district, subdistrict, landmark } = readOrderFields();
 
   let subtotal = 0;
   const rows = cart.map(item=>{
@@ -1213,17 +1424,17 @@ function showInvoice(){
   const orderContent = document.getElementById("orderContent");
   const now = new Date();
   const dateStr = now.toLocaleDateString("ar-IQ");
-  const invoiceNo = "INV-" + now.getTime().toString().slice(-6);
+  if (!CURRENT_INVOICE_NO) CURRENT_INVOICE_NO = generateInvoiceNo();
 
   orderContent.innerHTML = `
     <div class="invoice-wrap" id="invoiceContent">
       <div class="invoice-header">
-        <div>
-          <div class="invoice-logo">خطوة<span>.</span></div>
+        <div class="invoice-brand">
+          <img src="images/logo.png" alt="خطوة" class="invoice-logo-img">
           <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">متجر أحذية وشحاطات رجالية</div>
         </div>
         <div class="invoice-meta">
-          <b>فاتورة الطلب ${invoiceNo}</b>
+          <b>فاتورة رقم ${CURRENT_INVOICE_NO}</b>
           ${dateStr}
         </div>
       </div>
@@ -1260,24 +1471,27 @@ function showInvoice(){
         <p>
           ${name?`الاسم: ${name}<br>`:""}
           ${phone?`الهاتف: ${phone}<br>`:""}
-          ${province?`المحافظة: ${province}${district?" - "+district:""}<br>`:""}
+          ${province?`المحافظة: ${province}${district?" - "+district:""}${subdistrict?" - "+subdistrict:""}<br>`:""}
           ${landmark?`أقرب نقطة: ${landmark}<br>`:""}
         </p>
       </div>` : ""}
     </div>
+
+    <div class="invoice-number-banner">
+      🧾 احتفظ برقم الفاتورة هذا لمتابعة طلبك لاحقاً:
+      <span class="invoice-number-big">${CURRENT_INVOICE_NO}</span>
+    </div>
+    <div class="order-save-status" id="orderSaveStatus"></div>
+
     <div class="order-modal-foot">
-      <button class="btn ${SEND_METHOD==='messenger'?'btn-messenger':'btn-whatsapp'}" id="invoiceWaShareBtn" onclick="shareInvoiceToWhatsapp()">
+      <button class="btn ${SEND_METHOD==='messenger'?'btn-messenger':'btn-whatsapp'}" id="invoiceConfirmSendBtn" onclick="sendOrderWithInvoice()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.7-2.7-1.6-3.6-3.1-.1-.2-.1-.4.1-.6l.5-.6c.1-.2.1-.3 0-.5-.1-.2-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.5 3.9 2.7 1.1 2.7.7 3.2.7.5 0 1.6-.6 1.8-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.8 13.5 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2Z"/></svg>
-        إرسال الفاتورة عبر ${SEND_METHOD==='messenger'?'ماسنجر':'واتساب'}
-      </button>
-      <button class="btn btn-outline" id="copyOrderBtn" onclick="copyOrderForAdmin()" title="انسخ بيانات الطلب لتلصقها في لوحة التحكم">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        نسخ بيانات الطلب للوحة التحكم
+        تأكيد وإرسال الطلب عبر ${SEND_METHOD==='messenger'?'ماسنجر':'واتساب'}
       </button>
       <div class="invoice-export-row">
-        <button class="btn btn-outline" onclick="downloadInvoiceImage('png')">PNG</button>
-        <button class="btn btn-outline" onclick="downloadInvoiceImage('jpg')">JPG</button>
-        <button class="btn btn-outline" onclick="printInvoice()">PDF / طباعة</button>
+        <button class="btn btn-outline" onclick="downloadInvoiceImage('png')">📷 صورة PNG</button>
+        <button class="btn btn-outline" onclick="downloadInvoiceImage('jpg')">📷 صورة JPG</button>
+        <button class="btn btn-outline" onclick="printInvoice()">🖨️ طباعة / PDF</button>
       </div>
     </div>`;
 
@@ -1318,57 +1532,13 @@ async function downloadInvoiceImage(type){
   }
 }
 
-/* محاولة إرفاق صورة الفاتورة تلقائياً عند الإرسال للواتساب أو الماسنجر.
-   ملاحظة: روابط wa.me وm.me لا تدعم إرفاق ملفات تلقائياً (قيد من واتساب وماسنجر أنفسهم)،
-   لذلك نستخدم مشاركة الملفات عبر نظام الجهاز (Web Share API) إن كان متوفراً،
-   وإن تعذّر ذلك نوفر تحميل الصورة يدوياً ثم نفتح المحادثة لإرسالها. */
-async function shareInvoiceToWhatsapp(){
-  const btn = document.getElementById("invoiceWaShareBtn");
-  const originalLabel = btn?.innerHTML;
-  const openChat = SEND_METHOD === "messenger" ? sendOrderMessenger : sendOrderWhatsapp;
-  if (btn){ btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> جارٍ التحضير...`; }
-
-  try{
-    const canvas = await renderInvoiceCanvas();
-
-    if (canvas && navigator.canShare){
-      try{
-        const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("toBlob failed")), "image/png"));
-        const file = new File([blob], "فاتورة-خطوة.png", { type: "image/png" });
-        if (navigator.canShare({ files: [file] })){
-          await navigator.share({ files: [file], title: "فاتورة طلب من متجر خطوة", text: buildOrderText() || "" });
-          return;
-        }
-      }catch(shareErr){
-        // تعذّرت المشاركة المباشرة (مثلاً تلوّث الـ canvas أو رفض المستخدم) — ننتقل للبديل أدناه
-      }
-    }
-
-    // بديل: تنزيل الصورة وفتح واتساب/ماسنجر لإرسالها يدوياً
-    if (canvas){
-      try{
-        const link = document.createElement("a");
-        link.download = "فاتورة-خطوة.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-        alert("تم تحميل صورة الفاتورة على جهازك. سيتم الآن فتح المحادثة — يرجى إرفاق الصورة المُحمّلة يدوياً مع الرسالة.");
-      }catch(exportErr){
-        alert("تعذّر إرفاق صورة الفاتورة تلقائياً بسبب مصدر إحدى صور المنتجات. سيتم فتح المحادثة بنص الطلب، ويمكنك إرفاق الصورة يدوياً عبر زر PNG/JPG أو خيار الطباعة.");
-      }
-    } else {
-      alert("سيتم فتح المحادثة بنص الطلب كاملاً. لإرفاق صورة الفاتورة، استخدم زر PNG أو JPG أدناه ثم أرفقها يدوياً.");
-    }
-    openChat();
-  }catch(err){
-    openChat();
-  }finally{
-    if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
-  }
-}
-
 function printInvoice(){
-  const content = document.getElementById("invoiceContent")?.innerHTML;
+  let content = document.getElementById("invoiceContent")?.innerHTML;
   if (!content) return;
+  // نافذة الطباعة تُفتح بصفحة فارغة (about:blank)، فالمسارات النسبية للصور
+  // (مثل images/logo.png) لن تُحلّ بشكل صحيح إلا إذا حوّلناها لمسار مطلق أولاً
+  const absoluteLogoUrl = new URL("images/logo.png", window.location.href).href;
+  content = content.replace(/src="images\/logo\.png"/g, `src="${absoluteLogoUrl}"`);
   const win = window.open("","_blank");
   win.document.write(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -1380,8 +1550,7 @@ function printInvoice(){
 :root{--ember:#ff4d1c;--mist:#f4f5f7;--line:#e7e8ea;--ink:#16181b;--ink-soft:#4a4f57;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Almarai',sans-serif;color:var(--ink);direction:rtl;padding:30px;}
-.invoice-logo{font-family:'Tajawal',sans-serif;font-weight:900;font-size:28px;}
-.invoice-logo span{color:var(--ember);}
+.invoice-logo-img{height:42px;width:auto;display:block;}
 .invoice-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid var(--ink);}
 .invoice-meta{text-align:left;font-size:12px;color:var(--ink-soft);}
 .invoice-meta b{display:block;font-size:14px;color:var(--ink);}
@@ -1417,6 +1586,12 @@ function setupEvents(){
   // إغلاق نافذة الطلب
   document.getElementById("orderClose").addEventListener("click", closeOrderModal);
   document.getElementById("orderOverlay").addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeOrderModal(); });
+
+  // تتبّع الطلب برقم الفاتورة
+  document.getElementById("trackOrderLink")?.addEventListener("click", (e)=>{ e.preventDefault(); openTrackModal(); });
+  document.getElementById("trackClose")?.addEventListener("click", closeTrackModal);
+  document.getElementById("trackOverlay")?.addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeTrackModal(); });
+  document.getElementById("trackInvoiceInput")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter") searchOrderByInvoice(); });
 
   // إضافة للسلة
   document.body.addEventListener("click", (e)=>{
@@ -1483,6 +1658,7 @@ function setupEvents(){
       closeProductModal();
       closeCart();
       closeOrderModal();
+      closeTrackModal();
     }
   });
 
@@ -1511,7 +1687,11 @@ function setupWhatsappLinks(){
   document.querySelectorAll("[data-wa-general]").forEach(el=>{
     const msg = encodeURIComponent("السلام عليكم، أحتاج مساعدة بخصوص منتجات متجر خطوة 👟");
     el.href = `https://wa.me/${waNumber()}?text=${msg}`;
+    el.target = "_blank";
+    el.rel = "noopener";
   });
+  const fbLink = document.getElementById("floatMessengerLink");
+  if (fbLink) fbLink.href = messengerLink();
 }
 
 /* ================================================
@@ -1521,7 +1701,8 @@ const SOCIAL_ICONS = {
   facebook: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12Z"/></svg>`,
   instagram: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>`,
   tiktok: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.8c-.8-.8-1.3-1.9-1.3-3.1h-3v13.4c0 1.4-1.1 2.5-2.5 2.5s-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5c.3 0 .5 0 .8.1v-3.1c-.3 0-.5-.1-.8-.1-3 0-5.5 2.5-5.5 5.6s2.5 5.6 5.5 5.6 5.5-2.5 5.5-5.6V9.2c1.2.9 2.7 1.4 4.3 1.4V7.6c-1.1 0-2.2-.4-3-1.1-.4-.3-.7-.6-1-1Z"/></svg>`,
-  telegram: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 4.5 2.7 11.9c-.9.4-.9 1.6.1 1.9l4.5 1.5 1.7 5.5c.3.9 1.5 1.1 2 .3l2.5-3.3 4.6 3.4c.7.5 1.7.1 1.9-.7l3.1-14.5c.2-1-.7-1.8-1.6-1.5ZM8.6 14l8.6-6.9c.3-.2.6.1.4.4l-7.1 7.6c-.3.3-.5.7-.5 1.1l-.2 2.6-1.2-3.8c-.1-.4-.3-.7-.7-.9Z"/></svg>`
+  telegram: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 4.5 2.7 11.9c-.9.4-.9 1.6.1 1.9l4.5 1.5 1.7 5.5c.3.9 1.5 1.1 2 .3l2.5-3.3 4.6 3.4c.7.5 1.7.1 1.9-.7l3.1-14.5c.2-1-.7-1.8-1.6-1.5ZM8.6 14l8.6-6.9c.3-.2.6.1.4.4l-7.1 7.6c-.3.3-.5.7-.5 1.1l-.2 2.6-1.2-3.8c-.1-.4-.3-.7-.7-.9Z"/></svg>`,
+  custom: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2c2.5 2.7 4 6.2 4 10s-1.5 7.3-4 10c-2.5-2.7-4-6.2-4-10s1.5-7.3 4-10Z"/></svg>`
 };
 function renderSocialIcons(){
   const wrap = document.getElementById("socialsRow");
@@ -1531,8 +1712,12 @@ function renderSocialIcons(){
   if (CONTACT.instagram) links.push({href:CONTACT.instagram, key:"instagram", label:"انستغرام"});
   if (CONTACT.tiktok) links.push({href:CONTACT.tiktok, key:"tiktok", label:"تيك توك"});
   if (CONTACT.telegram) links.push({href:CONTACT.telegram, key:"telegram", label:"تلغرام"});
+  // روابط مخصّصة إضافية تُدار بالكامل من لوحة التحكم دون أي تعديل بالكود
+  (CONTACT.links || []).forEach(l=>{
+    if (l && l.href) links.push({href:l.href, key:"custom", label:l.label||"رابط"});
+  });
   wrap.innerHTML = links.map(l=>
-    `<a href="${l.href}" target="_blank" rel="noopener" aria-label="${l.label}">${SOCIAL_ICONS[l.key]}</a>`
+    `<a href="${l.href}" target="_blank" rel="noopener" aria-label="${l.label}">${SOCIAL_ICONS[l.key]||SOCIAL_ICONS.custom}</a>`
   ).join("");
 
   // رقم الهاتف في الفوتر (إن وُجد)

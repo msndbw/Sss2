@@ -105,5 +105,112 @@ const GitHubAPI = (() => {
     return res.json();
   }
 
-  return { verifyAccess, getTextFile, putTextFile, putBinaryFile, deleteFile };
+  /* ====================================================
+     طبقة قاعدة بيانات الطلبات (GitHub Issues API)
+     ----------------------------------------------------
+     كل طلب = Issue واحد في ريبو منفصل مخصص للطلبات فقط
+     (orders repo). هذا الريبو يُدار بتوكنين منفصلين:
+     - توكن قراءة فقط (عام، مضمّن بكود الموقع) لأجل البحث
+       برقم الفاتورة من صفحة الموقع العامة.
+     - توكن كتابة محدود الصلاحية (Issues فقط) يُستخدم من
+       متصفح الزبون لحظة إرسال الطلب لحفظه تلقائياً، ومن
+       لوحة التحكم لتحديث حالة الطلب (عبر تعليق/Label).
+     هذا الفصل يحمي بقية الريبو (المنتجات/الصور) حتى لو
+     تسرّب توكن القراءة العام، لأنه لا يملك أي صلاحية كتابة.
+     ==================================================== */
+  function ordersHeaders(token){
+    const h = {
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+    if (token) h["Authorization"] = `Bearer ${token}`;
+    return h;
+  }
+
+  function ordersBase(ordersCfg){
+    return `https://api.github.com/repos/${ordersCfg.owner}/${ordersCfg.repo}`;
+  }
+
+  /** ينشئ طلباً جديداً كـ GitHub Issue. يرجّع رقم الفاتورة ورقم الـ issue. */
+  async function createOrderIssue(ordersCfg, order){
+    const title = `طلب ${order.invoiceNo} — ${order.customer.name || order.customer.phone}`;
+    const body = "```json\n" + JSON.stringify(order, null, 2) + "\n```";
+    const res = await fetch(`${ordersBase(ordersCfg)}/issues`, {
+      method: "POST",
+      headers: { ...ordersHeaders(ordersCfg.writeToken), "Content-Type": "application/json" },
+      body: JSON.stringify({ title, body, labels: ["new-order"] })
+    });
+    if (!res.ok){
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.message || `فشل حفظ الطلب (${res.status})`);
+    }
+    return res.json();
+  }
+
+  /** يبحث عن طلب برقم الفاتورة (قراءة فقط، يمكن استخدامه بدون توكن أو بتوكن قراءة محدود) */
+  async function findOrderByInvoice(ordersCfg, invoiceNo){
+    const q = encodeURIComponent(`repo:${ordersCfg.owner}/${ordersCfg.repo} in:title "${invoiceNo}"`);
+    const res = await fetch(`https://api.github.com/search/issues?q=${q}`, {
+      headers: ordersHeaders(ordersCfg.readToken)
+    });
+    if (!res.ok) throw new Error(`تعذّر البحث (${res.status})`);
+    const data = await res.json();
+    const match = (data.items||[]).find(it => it.title.includes(invoiceNo));
+    if (!match) return null;
+    return parseOrderIssue(match);
+  }
+
+  /** يجلب كل الطلبات (لوحة التحكم) — يدعم فلترة بالحالة عبر label */
+  async function listOrderIssues(ordersCfg, state="all"){
+    const res = await fetch(`${ordersBase(ordersCfg)}/issues?state=${state}&per_page=100&sort=created&direction=desc`, {
+      headers: ordersHeaders(ordersCfg.readToken || ordersCfg.writeToken)
+    });
+    if (!res.ok) throw new Error(`تعذّر جلب الطلبات (${res.status})`);
+    const issues = await res.json();
+    return issues.filter(it => !it.pull_request).map(parseOrderIssue).filter(Boolean);
+  }
+
+  function parseOrderIssue(issue){
+    const m = /```json\n([\s\S]*?)\n```/.exec(issue.body || "");
+    if (!m) return null;
+    try{
+      const order = JSON.parse(m[1]);
+      order._issueNumber = issue.number;
+      order._issueState = issue.state;
+      order._labels = (issue.labels||[]).map(l => typeof l === "string" ? l : l.name);
+      return order;
+    }catch(e){ return null; }
+  }
+
+  /** يحدّث حالة الطلب (يضيف Label + تعليق توضيحي) دون لمس بقية الريبو */
+  async function updateOrderStatus(ordersCfg, issueNumber, newStatusLabel, comment){
+    const headersWrite = { ...ordersHeaders(ordersCfg.writeToken), "Content-Type": "application/json" };
+
+    await fetch(`${ordersBase(ordersCfg)}/issues/${issueNumber}`, {
+      method: "PATCH",
+      headers: headersWrite,
+      body: JSON.stringify({ labels: ["order", newStatusLabel] })
+    });
+
+    if (comment){
+      await fetch(`${ordersBase(ordersCfg)}/issues/${issueNumber}/comments`, {
+        method: "POST",
+        headers: headersWrite,
+        body: JSON.stringify({ body: comment })
+      });
+    }
+
+    if (newStatusLabel === "done" || newStatusLabel === "cancelled"){
+      await fetch(`${ordersBase(ordersCfg)}/issues/${issueNumber}`, {
+        method: "PATCH",
+        headers: headersWrite,
+        body: JSON.stringify({ state: "closed" })
+      });
+    }
+  }
+
+  return {
+    verifyAccess, getTextFile, putTextFile, putBinaryFile, deleteFile,
+    createOrderIssue, findOrderByInvoice, listOrderIssues, updateOrderStatus
+  };
 })();

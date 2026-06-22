@@ -14,7 +14,7 @@
 <div class="admin-wrap">
 
   <div class="admin-topbar">
-    <div class="admin-logo">خطوة<span>.</span><small>لوحة التحكم</small></div>
+    <div class="admin-logo"><img src="images/logo.png" alt="خطوة" class="admin-logo-img"><small>لوحة التحكم</small></div>
     <div style="display:flex;gap:10px;align-items:center;">
       <a href="index.html" class="btn btn-outline btn-sm" target="_blank">عرض الموقع</a>
       <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none;">تسجيل خروج</button>
@@ -34,12 +34,12 @@
     <form id="setupForm">
       <div class="field">
         <label>اسم المستخدم على GitHub</label>
-        <input type="text" id="cfgOwner" value="msndbw" required>
+        <input type="text" id="cfgOwner" placeholder="مثال: username" autocomplete="off" required>
       </div>
       <div class="field-row">
         <div class="field">
           <label>اسم الريبو</label>
-          <input type="text" id="cfgRepo" value="M" required>
+          <input type="text" id="cfgRepo" placeholder="مثال: my-store" autocomplete="off" required>
         </div>
         <div class="field">
           <label>الفرع (Branch)</label>
@@ -87,8 +87,10 @@
       <button class="tab-btn active" data-tab="addPanel">➕ إضافة منتج</button>
       <button class="tab-btn" data-tab="listPanel">📋 المنتجات</button>
       <button class="tab-btn" data-tab="ordersPanel">🧾 الطلبات</button>
+      <button class="tab-btn" data-tab="customersPanel">👥 الزبائن</button>
       <button class="tab-btn" data-tab="catsPanel">🏷️ الفئات</button>
       <button class="tab-btn" data-tab="contactPanel">📞 التواصل</button>
+      <button class="tab-btn" data-tab="dbPanel">🗄️ قاعدة البيانات</button>
     </div>
 
     <div class="alert alert-success" id="globalSuccess"></div>
@@ -211,27 +213,47 @@
 
     <!-- الطلبات -->
     <div class="panel" id="ordersPanel">
-      <div class="card">
-        <h3>📥 استلام طلب جديد</h3>
-        <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">
-          عندما يرسل الزبون طلباً من الموقع، يضغط زر "نسخ بيانات الطلب للوحة التحكم" في شاشة الفاتورة.
-          الصق الكود الذي نسخه هنا ثم اضغط "إضافة الطلب" لحفظه في هذه اللوحة.
+      <div class="card" id="dbNotConfiguredNotice" style="display:none;border:2px solid var(--ember);">
+        <h3>⚠️ قاعدة بيانات الطلبات غير مفعّلة بعد</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.9;">
+          لعرض الطلبات هنا تلقائياً، توجّه لتبويب "🗄️ قاعدة البيانات" وأكمل خطوات التفعيل
+          (إنشاء ريبو الطلبات + توكن القراءة). الطلبات الواردة من الزبائن عبر واتساب/ماسنجر
+          ستستمر بالوصول لك بشكل طبيعي حتى قبل التفعيل.
         </p>
-        <div class="field">
-          <label>كود الطلب الملصوق</label>
-          <textarea id="orderPasteInput" rows="4" placeholder="الصق كود الطلب هنا (يبدأ بـ KHATWA-ORDER:)"></textarea>
-        </div>
-        <div class="alert alert-error" id="orderPasteError"></div>
-        <div class="alert alert-success" id="orderPasteSuccess"></div>
-        <button class="btn btn-primary btn-sm" id="addOrderBtn" onclick="addOrderFromPaste()">➕ إضافة الطلب</button>
       </div>
 
-      <div class="card" style="margin-top:18px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-          <h3 style="margin-bottom:0;">الطلبات المحفوظة</h3>
-          <button class="btn btn-outline btn-sm" onclick="loadOrdersList()">🔄 تحديث</button>
+      <div class="card">
+        <div class="orders-toolbar">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px;">
+            <h3 style="margin-bottom:0;">📥 الطلبات الواردة</h3>
+            <button class="btn btn-outline btn-sm" onclick="loadOrdersList()">🔄 تحديث</button>
+          </div>
+          <input type="text" id="ordersSearchInput" placeholder="ابحث برقم الفاتورة، الاسم، أو الهاتف..." class="orders-search-input">
         </div>
+
+        <div class="orders-filter-chips" id="ordersStatusFilter">
+          <button class="chip active" data-status="all">الكل</button>
+          <button class="chip" data-status="new-order">🆕 جديد</button>
+          <button class="chip" data-status="confirmed">📞 مؤكَّد</button>
+          <button class="chip" data-status="processing">📦 قيد التجهيز</button>
+          <button class="chip" data-status="shipped">🚚 بالطريق</button>
+          <button class="chip" data-status="done">✅ مُسلَّم</button>
+          <button class="chip" data-status="cancelled">❌ ملغي</button>
+        </div>
+
         <div id="ordersList"><div class="empty-state">جارِ التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- الزبائن -->
+    <div class="panel" id="customersPanel">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <h3 style="margin-bottom:0;">👥 سجل الزبائن</h3>
+          <input type="text" id="customersSearchInput" placeholder="ابحث بالاسم أو رقم الهاتف..." class="orders-search-input" style="max-width:260px;">
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">يُبنى هذا السجل تلقائياً من الطلبات المحفوظة بقاعدة البيانات — كل رقم هاتف يظهر مرة واحدة مع كل طلباته.</p>
+        <div id="customersList"><div class="empty-state">جارِ التحميل...</div></div>
       </div>
     </div>
 
@@ -262,6 +284,10 @@
           <input type="text" id="ctWhatsapp" placeholder="9647xxxxxxxxx">
         </div>
         <div class="field">
+          <label>رابط ماسنجر الصفحة (مثال: https://m.me/yourpage)</label>
+          <input type="text" id="ctMessenger" placeholder="https://m.me/...">
+        </div>
+        <div class="field">
           <label>رقم الهاتف (يظهر كرابط اتصال، اختياري)</label>
           <input type="text" id="ctPhone" placeholder="07xxxxxxxxx">
         </div>
@@ -282,8 +308,43 @@
           <input type="text" id="ctTelegram" placeholder="https://t.me/...">
         </div>
 
+        <div class="field" style="border-top:1px solid var(--line);padding-top:18px;margin-top:6px;">
+          <label>روابط إضافية مستقبلية (أي منصة جديدة بدون تعديل الكود)</label>
+          <div id="customLinksList" style="margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" id="newLinkLabel" placeholder="اسم المنصة (مثال: سناب شات)" style="flex:1;min-width:140px;">
+            <input type="text" id="newLinkHref" placeholder="https://..." style="flex:2;min-width:180px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="addCustomLink()">➕ إضافة</button>
+          </div>
+        </div>
+
         <div style="margin-top:18px;">
           <button class="btn btn-primary" id="saveContactBtn" onclick="saveContactInfo()">💾 حفظ معلومات التواصل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- قاعدة بيانات الطلبات -->
+    <div class="panel" id="dbPanel">
+      <div class="card">
+        <h3>🗄️ قاعدة بيانات الطلبات</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.9;margin-bottom:16px;">
+          كل طلب يرسله الزبون من الموقع يُحفظ تلقائياً بريبو GitHub منفصل تماماً عن ريبو
+          المنتجات (حماية إضافية). هذا يتيح للزبون والإدارة البحث عن أي طلب لاحقاً برقم الفاتورة.
+        </p>
+
+        <ol class="db-setup-steps">
+          <li>أنشئ ريبو GitHub جديد فارغ مخصص للطلبات فقط (مثال: <code>khatwa-orders</code>). يفضّل أن يكون عاماً (Public) ليعمل البحث من الموقع بدون توكن.</li>
+          <li>تأكد أن خاصية Issues مفعّلة بإعدادات الريبو الجديد.</li>
+          <li>أنشئ Personal Access Token (Fine-grained) بصلاحية <b>Issues: Read & Write</b> على هذا الريبو فقط — بدون أي صلاحية Contents.</li>
+          <li>افتح ملف <code>orders-config.js</code> بمشروعك واملأ <code>owner</code> و<code>repo</code> و<code>writeToken</code> بالقيم، ثم انشره على GitHub Pages.</li>
+        </ol>
+
+        <div class="alert alert-error" id="dbConfigError"></div>
+        <div id="dbConfigStatus" class="db-status-box"></div>
+
+        <div style="margin-top:18px;">
+          <button class="btn btn-outline btn-sm" onclick="checkOrdersDbStatus()">🔄 إعادة فحص الإعدادات</button>
         </div>
       </div>
     </div>
@@ -297,6 +358,7 @@
 </div>
 
 <script src="github-api.js"></script>
+<script src="orders-config.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

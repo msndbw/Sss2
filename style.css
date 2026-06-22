@@ -165,16 +165,11 @@ input,textarea,select{font-family:inherit;}
 .site-header.scrolled .header-inner{padding:10px 0;}
 
 .logo{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:26px;
-  letter-spacing:.5px;
   display:flex;
-  align-items:baseline;
-  gap:6px;
+  align-items:center;
   cursor:pointer;
 }
-.logo span{color:var(--ember);}
+.logo-img{height:44px;width:auto;display:block;}
 
 .main-nav{display:flex;align-items:center;gap:30px;}
 .main-nav a{
@@ -653,8 +648,8 @@ input,textarea,select{font-family:inherit;}
   padding-bottom:40px;
   border-bottom:1px solid #2c2f34;
 }
-.footer-logo{font-family:var(--font-display);font-weight:900;font-size:24px;color:#fff;margin-bottom:12px;}
-.footer-logo span{color:var(--ember);}
+.footer-logo{margin-bottom:14px;}
+.footer-logo-img{height:48px;width:auto;display:block;}
 .footer-about{font-size:13px;line-height:1.9;color:#9aa0a8;max-width:280px;}
 .footer-col h4{font-family:var(--font-display);font-size:15px;margin-bottom:16px;color:#fff;}
 .footer-col ul li{margin-bottom:10px;}
@@ -1490,12 +1485,8 @@ input,textarea,select{font-family:inherit;}
   padding-bottom:16px;
   border-bottom:2px solid var(--ink);
 }
-.invoice-logo{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:26px;
-}
-.invoice-logo span{color:var(--ember);}
+.invoice-brand{display:flex;flex-direction:column;}
+.invoice-logo-img{height:40px;width:auto;display:block;}
 .invoice-meta{text-align:left;font-size:12px;color:var(--ink-soft);}
 .invoice-meta b{display:block;font-size:14px;color:var(--ink);}
 
@@ -1548,6 +1539,105 @@ input,textarea,select{font-family:inherit;}
 }
 .invoice-customer p{font-size:12px;line-height:1.9;color:var(--ink-soft);}
 
+/* ---------- لافتة رقم الفاتورة ---------- */
+.invoice-number-banner{
+  margin:0 28px 14px;
+  background:var(--ember-light);
+  border:2px dashed var(--ember);
+  border-radius:var(--radius-sm);
+  padding:14px 18px;
+  font-size:13px;
+  color:var(--ink);
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.invoice-number-big{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:17px;
+  color:var(--ember-dark);
+  letter-spacing:.5px;
+}
+
+/* ---------- حالة حفظ الطلب بقاعدة البيانات ---------- */
+.order-save-status{
+  margin:0 28px 14px;
+  font-size:12.5px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:18px;
+}
+.order-save-status.saving{color:var(--ink-soft);}
+.order-save-status.saved{color:var(--success);font-weight:700;}
+.order-save-status.error{color:var(--ember-dark);background:var(--ember-light);padding:10px 14px;border-radius:var(--radius-sm);}
+
+/* ---------- نافذة تتبّع الطلب ---------- */
+.track-overlay{
+  position:fixed;inset:0;
+  background:rgba(22,24,27,.55);
+  z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.track-overlay.open{opacity:1;pointer-events:all;}
+.track-modal{
+  background:var(--white);
+  border-radius:var(--radius-lg);
+  width:100%;max-width:520px;
+  max-height:88vh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transform:translateY(14px) scale(.98);
+  transition:transform .3s ease;
+}
+.track-overlay.open .track-modal{transform:translateY(0) scale(1);}
+.track-body{padding:24px;overflow-y:auto;}
+.track-hint{font-size:13px;color:var(--ink-soft);line-height:1.8;margin-bottom:16px;}
+.track-search-row{display:flex;gap:10px;margin-bottom:18px;}
+.track-search-row input{
+  flex:1;
+  padding:12px 16px;
+  border-radius:12px;
+  border:2px solid var(--line);
+  font-family:var(--font-body);
+  font-size:14px;
+  text-align:center;
+  letter-spacing:.5px;
+}
+.track-search-row input:focus{outline:none;border-color:var(--ember);}
+.track-msg{font-size:13px;padding:14px;border-radius:10px;text-align:center;}
+.track-msg.error{background:var(--ember-light);color:var(--ember-dark);}
+.track-msg.loading{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--ink-soft);}
+.track-result-card{background:var(--mist);border-radius:var(--radius-md);padding:18px;}
+.track-result-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+.track-invoice-no{font-family:var(--font-display);font-weight:900;font-size:16px;color:var(--ink);}
+.track-status-badge{
+  background:var(--ink);color:#fff;
+  font-size:11px;font-weight:700;
+  padding:6px 12px;border-radius:999px;
+  font-family:var(--font-display);
+}
+.track-result-date{font-size:11px;color:var(--ink-soft);margin-bottom:14px;}
+.track-result-section{margin-bottom:14px;}
+.track-result-section h4{font-family:var(--font-display);font-weight:800;font-size:13px;margin-bottom:8px;}
+.track-result-section p{font-size:12px;line-height:1.9;color:var(--ink-soft);}
+.track-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+.track-item:last-child{border-bottom:none;}
+.track-item-thumb{width:40px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--white);display:flex;align-items:center;justify-content:center;}
+.track-item-thumb img{width:100%;height:100%;object-fit:cover;}
+.track-item-body{flex:1;min-width:0;}
+.track-item-name{font-size:12.5px;font-weight:700;}
+.track-item-meta{font-size:10.5px;color:var(--ink-soft);}
+.track-item-price{font-size:12.5px;font-weight:700;white-space:nowrap;}
+.track-result-totals{border-top:2px solid var(--ink);padding-top:10px;}
+.track-result-totals div{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);padding:3px 0;}
+.track-result-totals .track-grand{font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--ember-dark);}
+
 /* ====================================================
    لوحة التحكم (admin)
    ==================================================== */
@@ -1564,11 +1654,9 @@ input,textarea,select{font-family:inherit;}
   border-bottom:1px solid var(--line);
 }
 .admin-logo{
-  font-family:var(--font-display);
-  font-weight:900;font-size:20px;
-  display:flex;align-items:baseline;gap:6px;
+  display:flex;align-items:center;gap:6px;
 }
-.admin-logo span{color:var(--ember);}
+.admin-logo-img{height:32px;width:auto;display:block;}
 .admin-logo small{
   font-size:12px;font-weight:700;
   color:var(--ink-soft);
@@ -2007,3 +2095,58 @@ input,textarea,select{font-family:inherit;}
   .invoice-table .td-thumb img,
   .invoice-table .td-thumb .icon-ph{width:38px;height:38px;}
 }
+
+/* ====================================================
+   لوحة التحكم — الطلبات / الزبائن / قاعدة البيانات
+   ==================================================== */
+.orders-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;margin-bottom:14px;
+}
+.orders-search-input{
+  flex:1;min-width:220px;max-width:340px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  font-family:var(--font-body);
+  font-size:13px;
+}
+.orders-search-input:focus{outline:none;border-color:var(--ember);}
+.orders-filter-chips{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;
+}
+.orders-filter-chips .chip{font-size:12px;padding:7px 14px;}
+
+.order-status-badge{
+  font-size:11px;font-weight:700;
+  background:var(--mist);
+  padding:5px 12px;border-radius:999px;
+  white-space:nowrap;
+}
+
+.db-setup-steps{
+  margin:0 0 18px;padding-inline-start:20px;
+  font-size:13px;line-height:2;color:var(--ink-soft);
+}
+.db-setup-steps code{
+  background:var(--mist);
+  padding:1px 6px;border-radius:4px;
+  font-size:12px;color:var(--ink);
+  direction:ltr;display:inline-block;
+}
+.db-status-box{margin-top:10px;}
+.db-status-row{
+  padding:14px 16px;border-radius:10px;
+  font-size:13px;display:flex;align-items:center;gap:8px;
+}
+.db-status-row.error{background:var(--ember-light);color:var(--ember-dark);}
+.db-status-row.ok{background:#e8f6ee;color:#1c7a45;}
+.db-status-row.loading{background:var(--mist);color:var(--ink-soft);}
+
+.custom-link-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--mist);
+  padding:8px 12px;border-radius:8px;
+  margin-bottom:6px;font-size:12.5px;font-weight:700;
+}
+.custom-link-row a{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right;}
