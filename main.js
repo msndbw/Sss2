@@ -1430,7 +1430,7 @@ function showInvoice(){
     <div class="invoice-wrap" id="invoiceContent">
       <div class="invoice-header">
         <div class="invoice-brand">
-          <img src="images/logo.png" alt="خطوة" class="invoice-logo-img">
+          <img src="logo.png" alt="خطوة" class="invoice-logo-img">
           <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">متجر أحذية وشحاطات رجالية</div>
         </div>
         <div class="invoice-meta">
@@ -1537,7 +1537,7 @@ function printInvoice(){
   if (!content) return;
   // نافذة الطباعة تُفتح بصفحة فارغة (about:blank)، فالمسارات النسبية للصور
   // (مثل images/logo.png) لن تُحلّ بشكل صحيح إلا إذا حوّلناها لمسار مطلق أولاً
-  const absoluteLogoUrl = new URL("images/logo.png", window.location.href).href;
+  const absoluteLogoUrl = new URL("logo.png", window.location.href).href;
   content = content.replace(/src="images\/logo\.png"/g, `src="${absoluteLogoUrl}"`);
   const win = window.open("","_blank");
   win.document.write(`<!DOCTYPE html>
