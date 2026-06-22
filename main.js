@@ -1587,7 +1587,8 @@ function setupEvents(){
   document.getElementById("orderClose").addEventListener("click", closeOrderModal);
   document.getElementById("orderOverlay").addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeOrderModal(); });
 
-  // تتبّع الطلب برقم الفاتورة
+  // تتبّع الطلب برقم الفاتورة — الزر بالهيدر + الرابط بالقائمة
+  document.getElementById("trackHeaderBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); openTrackModal(); });
   document.getElementById("trackOrderLink")?.addEventListener("click", (e)=>{ e.preventDefault(); openTrackModal(); });
   document.getElementById("trackClose")?.addEventListener("click", closeTrackModal);
   document.getElementById("trackOverlay")?.addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeTrackModal(); });

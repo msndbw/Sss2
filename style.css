@@ -2150,3 +2150,12 @@ input,textarea,select{font-family:inherit;}
   margin-bottom:6px;font-size:12.5px;font-weight:700;
 }
 .custom-link-row a{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right;}
+
+/* زر تتبّع الطلب بالهيدر */
+.track-header-btn{
+  position:relative;
+  color:var(--ink);
+}
+.track-header-btn:hover{
+  color:var(--ember);
+}

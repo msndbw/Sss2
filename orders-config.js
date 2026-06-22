@@ -1,13 +1,12 @@
-/* ====================================================
-   orders-config.js — تم تعديله لاستخدام نفس ريبو الموقع (Sss2)
-   يمكنك لاحقاً إنشاء ريبو منفصل وتغيير repo هنا
-   ==================================================== */
+/* orders-config.js — إعدادات قاعدة بيانات الطلبات */
 
 const ORDERS_CONFIG = {
   owner: "msndbw",
-  repo: "Sss2",          // ← نفس ريبو الموقع (غيّره لاحقاً لريبو منفصل)
+  repo:  "Sss2",
 
-  // توكن بصلاحية Issues: Read and write على هذا الريبو
+  /* هذا التوكن يحتاج صلاحية Issues: Read and write على ريبو Sss2
+     اذهب لـ GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+     عدّل التوكن الحالي وأضف صلاحية Issues: Read and write على ريبو Sss2 */
   writeToken: "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",
 
   readToken: ""
