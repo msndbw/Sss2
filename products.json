@@ -288,34 +288,6 @@
       "rating": 4.4,
       "code": "KH-0012",
       "visible": true
-    },
-    {
-      "id": "p1782126214469",
-      "code": "KH-0013",
-      "name": "مطراش اصلي",
-      "category": "شحاطات",
-      "icon": "sneaker",
-      "image": "images/p1782126214469_1782126214469_0.jpg",
-      "images": [
-        "images/p1782126214469_1782126214469_0.jpg"
-      ],
-      "price": 20000,
-      "oldPrice": 25000,
-      "discount": 20,
-      "sizes": [
-        40,
-        41,
-        42,
-        43,
-        44,
-        45
-      ],
-      "colors": [],
-      "status": "limited",
-      "badge": "new",
-      "visible": true,
-      "description": "مطراش اصلي رجالي",
-      "rating": 4.5
     }
   ],
   "contact": {

@@ -24,8 +24,7 @@ const GitHubAPI = (() => {
   function headers(token){
     return {
       "Authorization": `Bearer ${token}`,
-      "Accept": "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28"
+      "Accept": "application/vnd.github+json"
     };
   }
 
@@ -120,8 +119,7 @@ const GitHubAPI = (() => {
      ==================================================== */
   function ordersHeaders(token){
     const h = {
-      "Accept": "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28"
+      "Accept": "application/vnd.github+json"
     };
     if (token) h["Authorization"] = `Bearer ${token}`;
     return h;
@@ -147,14 +145,11 @@ const GitHubAPI = (() => {
     return res.json();
   }
 
-  /** يبحث عن طلب برقم الفاتورة */
+  /** يبحث عن طلب برقم الفاتورة (قراءة فقط، يمكن استخدامه بدون توكن أو بتوكن قراءة محدود) */
   async function findOrderByInvoice(ordersCfg, invoiceNo){
-    /* نستخدم writeToken إن كان readToken فارغاً — لأن البحث العام بدون توكن
-       يخضع لحد 10 طلبات/دقيقة ويفشل بـ 401 لو الريبو private */
-    const token = ordersCfg.readToken || ordersCfg.writeToken || "";
     const q = encodeURIComponent(`repo:${ordersCfg.owner}/${ordersCfg.repo} in:title "${invoiceNo}"`);
     const res = await fetch(`https://api.github.com/search/issues?q=${q}`, {
-      headers: ordersHeaders(token)
+      headers: ordersHeaders(ordersCfg.readToken)
     });
     if (!res.ok) throw new Error(`تعذّر البحث (${res.status})`);
     const data = await res.json();
@@ -163,11 +158,10 @@ const GitHubAPI = (() => {
     return parseOrderIssue(match);
   }
 
-  /** يجلب كل الطلبات (لوحة التحكم) */
+  /** يجلب كل الطلبات (لوحة التحكم) — يدعم فلترة بالحالة عبر label */
   async function listOrderIssues(ordersCfg, state="all"){
-    const token = ordersCfg.readToken || ordersCfg.writeToken || "";
     const res = await fetch(`${ordersBase(ordersCfg)}/issues?state=${state}&per_page=100&sort=created&direction=desc`, {
-      headers: ordersHeaders(token)
+      headers: ordersHeaders(ordersCfg.readToken || ordersCfg.writeToken)
     });
     if (!res.ok) throw new Error(`تعذّر جلب الطلبات (${res.status})`);
     const issues = await res.json();
